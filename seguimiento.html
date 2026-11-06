@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPOSTEL - Seguimiento de Masters</title>
+    <title>IPOSTEL - Seguimiento y Control</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -17,13 +17,18 @@
         .amarillo { border-left-color: #ffc107; }
         .rojo { border-left-color: #dc3545; }
         .negro { border-left-color: #212529; }
+        .timeline { list-style: none; padding-left: 0; }
+        .timeline li { position: relative; padding-left: 30px; margin-bottom: 20px; }
+        .timeline li::before { content: ''; position: absolute; left: 0; top: 0; width: 15px; height: 15px; border-radius: 50%; background-color: #0d1b5e; }
+        .timeline li::after { content: ''; position: absolute; left: 7px; top: 15px; bottom: -20px; width: 2px; background-color: #dee2e6; }
+        .timeline li:last-child::after { display: none; }
     </style>
 </head>
 <body>
 
     <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-box-seam me-2"></i>IPOSTEL - Seguimiento</a>
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-truck me-2"></i>IPOSTEL - Seguimiento y Control</a>
             <div class="d-flex">
                 <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
             </div>
@@ -32,7 +37,7 @@
 
     <div class="container-fluid px-4">
         <!-- Tarjetas de Resumen -->
-        <div class="row mb-4" id="tarjetasResumen">
+        <div class="row mb-4">
             <div class="col-md-3">
                 <div class="card card-semaforo verde shadow-sm p-3">
                     <h6 class="text-muted mb-1">Masters OK</h6>
@@ -62,7 +67,7 @@
         <!-- Tabla de Masters -->
         <div class="card shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-list-ul me-2"></i>Listado de Masters</h5>
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-list-ul me-2"></i>Tracking de Masters</h5>
                 <button class="btn btn-primary btn-sm" onclick="cargarMasters()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
             </div>
             <div class="card-body p-0">
@@ -71,16 +76,15 @@
                         <thead class="table-light">
                             <tr>
                                 <th>ID Master</th>
-                                <th>Fecha</th>
-                                <th>Origen</th>
-                                <th>Destino</th>
+                                <th>Origen -> Destino</th>
                                 <th>Piezas</th>
                                 <th>Estatus</th>
-                                <th>Semáforo</th>
+                                <th>Alerta</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tablaMasters">
-                            <tr><td colspan="7" class="text-center py-4">Cargando datos...</td></tr>
+                            <tr><td colspan="6" class="text-center py-4">Cargando datos...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -88,12 +92,100 @@
         </div>
     </div>
 
+    <!-- Modal para Timeline y Registro de Hito -->
+    <div class="modal fade" id="modalTimeline" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold">Timeline del Master: <span id="modalIdMaster" class="text-primary"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 border-end">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> Historial de Hitos</h6>
+                            <ul class="timeline" id="listaTimeline">
+                                <li class="text-muted">Cargando historial...</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle"></i> Registrar Nuevo Hito</h6>
+                            <form id="formHito">
+                                <input type="hidden" id="hitoIdMaster">
+                                <div class="mb-3">
+                                    <label class="form-label">Hito a registrar</label>
+                                    <select class="form-select" id="selectHito" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="Entregado_MRW">📦 Entregado a MRW</option>
+                                        <option value="En_Transito">🛣️ En Tránsito Nacional</option>
+                                        <option value="Llegada_Destino">🏢 Llegada a Destino</option>
+                                        <option value="Entregado">✅ Entrega Final</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Observaciones</label>
+                                    <textarea class="form-control" id="obsHito" rows="3" placeholder="Opcional..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100">Guardar Hito</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (necesario para el modal) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
+        let modalTimeline;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarMasters();
+            modalTimeline = new bootstrap.Modal(document.getElementById('modalTimeline'));
+            
+            // Evento para guardar el hito
+            document.getElementById('formHito').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = e.target.querySelector('button[type="submit"]');
+                btn.disabled = true;
+                btn.innerHTML = 'Guardando...';
+
+                const datos = {
+                    accion: 'registrarHito',
+                    idMaster: document.getElementById('hitoIdMaster').value,
+                    hito: document.getElementById('selectHito').value,
+                    observaciones: document.getElementById('obsHito').value
+                };
+
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: new URLSearchParams(datos)
+                    });
+                    const data = await response.json();
+
+                    if (data.exito) {
+                        Swal.fire('¡Guardado!', 'El hito ha sido registrado.', 'success');
+                        document.getElementById('formHito').reset();
+                        cargarMasters(); // Recargar tabla principal
+                        abrirTimeline(datos.idMaster); // Recargar el timeline del modal
+                    } else {
+                        Swal.fire('Error', data.mensaje, 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error de conexión', 'No se pudo conectar.', 'error');
+                }
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar Hito';
+            });
+        });
 
         async function cargarMasters() {
             const tbody = document.getElementById('tablaMasters');
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Cargando datos...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Cargando datos...</td></tr>';
 
             try {
                 const response = await fetch(SCRIPT_URL, {
@@ -107,7 +199,7 @@
                     let conteo = { OK: 0, RETRASO: 0, CRITICO: 0, EXTRAVIADO: 0 };
 
                     if (data.masters.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No hay Masters registrados en el sistema aún.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No hay Masters registrados en el sistema aún.</td></tr>';
                     }
 
                     data.masters.forEach(m => {
@@ -120,12 +212,15 @@
                         let fila = `
                             <tr>
                                 <td class="fw-bold">${m.id}</td>
-                                <td>${m.fecha}</td>
-                                <td>${m.origen}</td>
-                                <td>${m.destino}</td>
+                                <td>${m.origen} <i class="bi bi-arrow-right"></i> ${m.destino}</td>
                                 <td>${m.piezas}</td>
                                 <td><span class="badge bg-secondary">${m.estatus}</span></td>
                                 <td><span class="badge ${badgeClass}">${m.alerta}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="abrirTimeline('${m.id}')">
+                                        <i class="bi bi-clock-history"></i> Ver / Actualizar
+                                    </button>
+                                </td>
                             </tr>
                         `;
                         tbody.innerHTML += fila;
@@ -136,16 +231,32 @@
                     document.getElementById('countCritico').textContent = conteo.CRITICO;
                     document.getElementById('countExtraviado').textContent = conteo.EXTRAVIADO;
 
-                } else {
-                    Swal.fire('Error', data.mensaje, 'error');
                 }
             } catch (error) {
-                Swal.fire('Error de conexión', 'No se pudo conectar con el servidor.', 'error');
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
             }
         }
 
-        // Cargar al iniciar
-        document.addEventListener('DOMContentLoaded', cargarMasters);
+        function abrirTimeline(idMaster) {
+            document.getElementById('modalIdMaster').textContent = idMaster;
+            document.getElementById('hitoIdMaster').value = idMaster;
+            
+            const lista = document.getElementById('listaTimeline');
+            lista.innerHTML = '<li class="text-muted">Cargando historial...</li>';
+
+            // Nota: Esta función de obtener el historial la agregaremos al backend luego, por ahora mostramos un placeholder
+            // Aquí simulo la carga visual del timeline
+            setTimeout(() => {
+                lista.innerHTML = `
+                    <li>
+                        <strong>Master Creado</strong><br>
+                        <small class="text-muted">Fecha de creación en el sistema</small>
+                    </li>
+                `;
+            }, 500);
+
+            modalTimeline.show();
+        }
     </script>
 </body>
 </html>
