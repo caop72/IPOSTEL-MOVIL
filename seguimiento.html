@@ -237,23 +237,52 @@
             }
         }
 
-        function abrirTimeline(idMaster) {
+        // FUNCIÓN CORREGIDA: Ahora trae los datos reales del backend
+        async function abrirTimeline(idMaster) {
             document.getElementById('modalIdMaster').textContent = idMaster;
             document.getElementById('hitoIdMaster').value = idMaster;
             
             const lista = document.getElementById('listaTimeline');
             lista.innerHTML = '<li class="text-muted">Cargando historial...</li>';
 
-            // Nota: Esta función de obtener el historial la agregaremos al backend luego, por ahora mostramos un placeholder
-            // Aquí simulo la carga visual del timeline
-            setTimeout(() => {
-                lista.innerHTML = `
-                    <li>
-                        <strong>Master Creado</strong><br>
-                        <small class="text-muted">Fecha de creación en el sistema</small>
-                    </li>
-                `;
-            }, 500);
+            try {
+                // Llamada real al backend para obtener el historial
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({ accion: 'obtenerTimeline', idMaster: idMaster })
+                });
+                const data = await response.json();
+
+                if (data.exito) {
+                    lista.innerHTML = '';
+                    
+                    // Hito inicial siempre presente
+                    lista.innerHTML += `
+                        <li>
+                            <strong>Master Creado</strong><br>
+                            <small class="text-muted">Registrado en el sistema</small>
+                        </li>
+                    `;
+
+                    // Hitos guardados en la base de datos
+                    if (data.historial.length === 0) {
+                        lista.innerHTML += '<li class="text-muted">No hay más hitos registrados aún.</li>';
+                    } else {
+                        data.historial.forEach(h => {
+                            let nombreHito = h.hito.replace('_', ' ');
+                            lista.innerHTML += `
+                                <li>
+                                    <strong>${nombreHito}</strong><br>
+                                    <small class="text-muted"><i class="bi bi-calendar-event"></i> ${h.fecha}</small><br>
+                                    ${h.observaciones ? `<small class="text-secondary">Obs: ${h.observaciones}</small>` : ''}
+                                </li>
+                            `;
+                        });
+                    }
+                }
+            } catch (error) {
+                lista.innerHTML = '<li class="text-danger">Error al cargar el historial.</li>';
+            }
 
             modalTimeline.show();
         }
