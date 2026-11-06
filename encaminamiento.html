@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPOSTEL - Encaminamiento</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background-color: #f4f6f9; }
+        .navbar { background-color: #0d1b5e; }
+        .navbar-brand, .nav-link { color: white !important; }
+        .card { border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-box-seam me-2"></i>IPOSTEL - Encaminamiento</a>
+            <div class="d-flex">
+                <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <div class="row">
+            <!-- Formulario para Crear Master -->
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-plus-circle me-2"></i>Crear Nuevo Master</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="formMaster">
+                            <div class="mb-3">
+                                <label class="form-label">Estado Origen</label>
+                                <input type="text" class="form-control" id="origen" required placeholder="Ej: Caracas">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Estado Destino</label>
+                                <select class="form-select" id="destino" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="Aragua">Aragua</option>
+                                    <option value="Carabobo">Carabobo</option>
+                                    <option value="Zulia">Zulia</option>
+                                    <option value="Miranda">Miranda</option>
+                                    <option value="Lara">Lara</option>
+                                    <option value="Táchira">Táchira</option>
+                                    <option value="Mérida">Mérida</option>
+                                    <option value="Anzoátegui">Anzoátegui</option>
+                                    <option value="Bolívar">Bolívar</option>
+                                    <option value="Amazonas">Amazonas</option>
+                                </select>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">Piezas</label>
+                                    <input type="number" class="form-control" id="piezas" required min="1">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Peso (Kg)</label>
+                                    <input type="number" step="0.1" class="form-control" id="peso" required min="0.1">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">N° Guía MRW</label>
+                                <input type="text" class="form-control" id="guiaMrw" placeholder="Opcional">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 fw-bold">Guardar Master</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Masters -->
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-list-ul me-2"></i>Masters Registrados</h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="cargarMasters()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Origen</th>
+                                        <th>Destino</th>
+                                        <th>Piezas</th>
+                                        <th>Estatus</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaMasters">
+                                    <tr><td colspan="5" class="text-center py-4">Cargando datos...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
+
+        // Cargar la tabla al iniciar
+        document.addEventListener('DOMContentLoaded', cargarMasters);
+
+        // Evento para guardar un Master
+        document.getElementById('formMaster').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = 'Guardando...';
+
+            const datos = {
+                accion: 'crearMaster',
+                origen: document.getElementById('origen').value,
+                destino: document.getElementById('destino').value,
+                piezas: document.getElementById('piezas').value,
+                peso: document.getElementById('peso').value,
+                guiaMrw: document.getElementById('guiaMrw').value
+            };
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams(datos)
+                });
+                const data = await response.json();
+
+                if (data.exito) {
+                    Swal.fire('¡Guardado!', 'El Master ha sido creado.', 'success');
+                    document.getElementById('formMaster').reset();
+                    cargarMasters(); // Recargar tabla
+                } else {
+                    Swal.fire('Error', data.mensaje, 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error de conexión', 'No se pudo conectar con el servidor.', 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = 'Guardar Master';
+        });
+
+        // Función para cargar la tabla
+        async function cargarMasters() {
+            const tbody = document.getElementById('tablaMasters');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Cargando datos...</td></tr>';
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({ accion: 'obtenerMasters' })
+                });
+                const data = await response.json();
+
+                if (data.exito) {
+                    tbody.innerHTML = '';
+                    if (data.masters.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay Masters registrados.</td></tr>';
+                    }
+                    data.masters.forEach(m => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td class="fw-bold">${m.id}</td>
+                                <td>${m.origen}</td>
+                                <td>${m.destino}</td>
+                                <td>${m.piezas}</td>
+                                <td><span class="badge bg-secondary">${m.estatus}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
+            }
+        }
+    </script>
+</body>
+</html>
