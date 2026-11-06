@@ -11,7 +11,6 @@
         body { background-color: #f4f6f9; }
         .navbar { background-color: #0d1b5e; }
         .navbar-brand, .nav-link { color: white !important; }
-        .card { border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -20,7 +19,10 @@
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#"><i class="bi bi-box-seam me-2"></i>IPOSTEL - Encaminamiento</a>
             <div class="d-flex">
-                <button class="btn btn-warning btn-sm me-2 fw-bold text-dark" onclick="emitirReporte()"><i class="bi bi-file-earmark-pdf"></i> Emitir Reporte PDF</button>
+                <!-- BOTÓN DE REPORTE PDF AGREGADO AQUÍ -->
+                <button class="btn btn-warning btn-sm me-2 fw-bold text-dark" onclick="emitirReporte()">
+                    <i class="bi bi-file-earmark-pdf"></i> Emitir Reporte PDF
+                </button>
                 <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
             </div>
         </div>
@@ -109,13 +111,10 @@
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
 
-        // Cargar la tabla al iniciar
         document.addEventListener('DOMContentLoaded', cargarMasters);
 
-        // Evento para guardar un Master
         document.getElementById('formMaster').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const btn = e.target.querySelector('button[type="submit"]');
             btn.disabled = true;
             btn.innerHTML = 'Guardando...';
@@ -139,7 +138,7 @@
                 if (data.exito) {
                     Swal.fire('¡Guardado!', 'El Master ha sido creado.', 'success');
                     document.getElementById('formMaster').reset();
-                    cargarMasters(); // Recargar tabla
+                    cargarMasters();
                 } else {
                     Swal.fire('Error', data.mensaje, 'error');
                 }
@@ -151,7 +150,6 @@
             btn.innerHTML = 'Guardar Master';
         });
 
-        // Función para cargar la tabla
         async function cargarMasters() {
             const tbody = document.getElementById('tablaMasters');
             tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Cargando datos...</td></tr>';
@@ -184,7 +182,9 @@
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
             }
         }
-                async function emitirReporte() {
+
+        // FUNCIÓN NUEVA PARA EL REPORTE PDF
+        async function emitirReporte() {
             Swal.fire({
                 title: 'Generando Reporte...',
                 text: 'Por favor espere, esto puede tardar unos segundos.',
