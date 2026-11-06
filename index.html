@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bienvenido - Control de Movilidad</title>
+  <title>IPOSTEL - Informe de Movilidad</title>
   
   <!-- ETIQUETAS OPEN GRAPH -->
   <meta property="og:title" content="IPOSTEL - Informe de Movilidad">
@@ -19,7 +19,6 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
   <style>
-    /* Aquí va todo tu CSS de la portada y el login */
     /* ========================================================
        ESTILOS DE LA PORTADA ANIMADA
        ======================================================== */
@@ -150,13 +149,24 @@
       justify-content: center; 
       padding: 20px; 
       margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    .login-card { width: 100%; max-width: 420px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-    .flag-bar { height: 5px; background: linear-gradient(to right, #FFCC00 33%, #0033A0 33%, #0033A0 66%, #EF3340 66%); border-radius: 20px 20px 0 0; }
+    .login-card { 
+        width: 100%; max-width: 420px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
+        background-color: #fff; overflow: hidden; position: relative;
+    }
+    .flag-bar { height: 5px; background: linear-gradient(to right, #FFCC00 33%, #0033A0 33%, #0033A0 66%, #EF3340 66%); }
+    
+    /* Ajustes para que el form se vea bonito */
+    .form-control { border-radius: 10px; padding: 12px 15px; border: 1px solid #ced4da; background: #f8f9fa; }
+    .form-control:focus { box-shadow: 0 0 0 0.25rem rgba(13, 27, 94, 0.25); border-color: #0d1b5e; }
+    .btn-primary { background-color: #0d1b5e; border: none; border-radius: 10px; padding: 12px; font-weight: bold; letter-spacing: 1px; transition: all 0.3s ease; }
+    .btn-primary:hover { background-color: #1e3a8a; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(13, 27, 94, 0.4); }
   </style>
 </head>
 <body>
 
+  <!-- CAPA 1: LA PORTADA ANIMADA -->
   <div id="pantalla-portada">
     <div class="titulo-portada">Observatorio Estadístico</div>
     <div class="subtitulo-portada">Movilidad</div>
@@ -209,177 +219,81 @@
     </button>
   </div>
 
-  <!-- CAPA 2: EL LOGIN -->
+  <!-- CAPA 2: EL LOGIN (ADAPTADO A TU SISTEMA) -->
   <div class="card login-card">
     <div class="flag-bar"></div>
     <div class="card-body p-4">
-      <h4 class="mb-3 text-center">🇻🇪 Servicio de Apostilla</h4>
+      <h4 class="mb-3 text-center">🇻🇪 IPOSTEL - Movilidad</h4>
 
-      <form id="loginForm" onsubmit="SEGURIDAD_CAOP_iniciarSesion(event)">
+      <form id="loginForm">
         <div class="mb-3">
-          <label class="form-label">Seleccione Usuario</label>
-          <select class="form-select" id="tipoUsuario" required onchange="verificarPerfil()">
-            <option value="" disabled selected>Elija una opción...</option>
-            <option value="Presidencia">Presidencia</option>
-            <option value="Despacho">Despacho</option>
-            <option value="Observatorio">Observatorio</option>
-            <option value="OPT CUA">OPT CUA</option>
-            <option value="OPT CARMELITAS">OPT CARMELITAS</option>
-            <option value="OPT CHACAO">OPT CHACAO</option>
-            <option value="OPT GALERIAS">OPT GALERIAS</option>
-          </select>
-        </div>
-
-        <!-- EL CORREO SE OCULTA PARA PRESIDENCIA, DESPACHO Y OBSERVATORIO -->
-        <div class="mb-3" id="grupoCorreo">
-          <label class="form-label">Correo electrónico</label>
-          <input type="email" class="form-control" id="correo" placeholder="tucorreo@dominio.com">
+          <label class="form-label">Usuario</label>
+          <input type="text" class="form-control" id="usuario" required autocomplete="username" placeholder="Ingrese su usuario">
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Clave (4 dígitos)</label>
-          <input type="password" class="form-control" id="clave" maxlength="4" pattern="\d{4}" required placeholder="****" inputmode="numeric">
+          <label class="form-label">Clave</label>
+          <input type="password" class="form-control" id="clave" required autocomplete="current-password" placeholder="Ingrese su clave">
         </div>
 
-        <button type="submit" class="btn btn-primary w-100" id="btnLogin">Ingresar</button>
-
-        <div class="text-center mt-3">
-          <a href="#" onclick="SEGURIDAD_CAOP_olvideClave(event)" class="small">¿Olvidaste tu clave?</a>
-        </div>
+        <button type="submit" class="btn btn-primary w-100" id="btnLogin">Ingresar al Sistema</button>
       </form>
 
-      <div id="mensajeError" class="text-danger mt-2 small text-center"></div>
+      <div class="text-center mt-3">
+          <small class="text-muted">&copy; 2024 IPOSTEL - Todos los derechos reservados.</small>
+      </div>
     </div>
   </div>
 
 <script>
-const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbx7aDFr2lTIQcLgwyOqGODXQQFzsJhivdL02huOwvX4iC1zSsEGts75QL3rED3BcR3zhw/exec";
+// URL DE TU GOOGLE APPS SCRIPT (IPOSTEL)
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
 
-// FUNCIÓN PARA OCULTAR EL CORREO
-function verificarPerfil() {
-  const usuario = document.getElementById('tipoUsuario').value;
-  const grupoCorreo = document.getElementById('grupoCorreo');
-  const inputCorreo = document.getElementById('correo');
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnLogin');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Validando...';
 
-  // Ocultamos para Presidencia, Despacho y Observatorio
-  if (usuario === 'Presidencia' || usuario === 'Despacho' || usuario === 'Observatorio') {
-    grupoCorreo.style.display = 'none';
-    inputCorreo.required = false;
-    inputCorreo.value = 'sin_correo@sistema.local'; 
-  } else {
-    // Para las OPTs, mostramos el correo
-    grupoCorreo.style.display = 'block';
-    inputCorreo.required = true;
-    inputCorreo.value = '';
-  }
-}
+    const usuario = document.getElementById('usuario').value;
+    const clave = document.getElementById('clave').value;
 
-function SEGURIDAD_CAOP_iniciarSesion(event) {
-  event.preventDefault();
-  const usuario = document.getElementById('tipoUsuario').value;
-  const correo  = document.getElementById('correo').value.trim() || 'sin_correo@sistema.local';
-  const clave   = document.getElementById('clave').value.trim();
-  const btn     = document.getElementById('btnLogin');
-  const errorDiv= document.getElementById('mensajeError');
+    try {
+        // Usamos URLSearchParams tal como exige tu backend
+        const response = await fetch(URL_APPS_SCRIPT, {
+            method: 'POST',
+            body: new URLSearchParams({ accion: 'login', usuario: usuario, clave: clave })
+        });
+        const data = await response.json();
 
-  btn.innerText = "Verificando..."; btn.disabled = true; errorDiv.innerText = "";
-
-  fetch(URL_APPS_SCRIPT, {
-    method: 'POST',
-    body: JSON.stringify({ accion: 'login', usuario, clave, correo }),
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-  })
-  .then(r => r.json())
-  .then(resp => {
-    if (!resp.exito) {
-      errorDiv.innerText = resp.mensaje;
-      btn.innerText = "Ingresar"; btn.disabled = false;
-      return;
+        if (data.exito) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Bienvenido',
+                text: `Ingresando como: ${data.rol}`,
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                const rol = data.rol;
+                // Redirección adaptada a tus archivos
+                if (rol.includes('Encaminamiento')) window.location.href = 'encaminamiento.html';
+                else if (rol.includes('Seguimiento')) window.location.href = 'seguimiento.html';
+                else if (rol.includes('CNC')) window.location.href = 'coordinador_cnc.html';
+                else if (rol.includes('Estado')) window.location.href = 'estados.html';
+                else if (rol.includes('Observatorio') || rol.includes('Presidencia') || rol.includes('Despacho') || rol.includes('Operaciones')) window.location.href = 'observatorio.html';
+                else window.location.href = 'observatorio.html'; 
+            });
+        } else {
+            Swal.fire('Acceso Denegado', data.mensaje, 'error');
+            btn.disabled = false;
+            btn.innerHTML = 'Ingresar al Sistema';
+        }
+    } catch (error) {
+        Swal.fire('Error de conexión', 'Verifica tu conexión a internet o el Apps Script.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = 'Ingresar al Sistema';
     }
-    if (resp.requiereCambio) {
-      SEGURIDAD_CAOP_pedirCambioClave(usuario, correo, resp.rol);
-    } else {
-      SEGURIDAD_CAOP_redirigir(resp.rol, usuario, correo);
-    }
-  })
-  .catch(() => {
-    errorDiv.innerText = "Error de conexión. Verifique su Apps Script.";
-    btn.innerText = "Ingresar"; btn.disabled = false;
-  });
-}
-
-function SEGURIDAD_CAOP_pedirCambioClave(usuario, correo, rol) {
-  Swal.fire({
-    title: '🔐 Crea tu clave',
-    text: 'Es tu primer ingreso. Debes crear una clave nueva de 4 dígitos (no puede ser 1234).',
-    input: 'password',
-    inputLabel: 'Nueva clave (4 dígitos)',
-    inputAttributes: { maxlength: 4, pattern: '\\d{4}', inputmode: 'numeric' },
-    inputValidator: (v) => {
-      if (!v || v.length !== 4 || !/^\d+$/.test(v)) return 'Debe ser de 4 dígitos numéricos.';
-      if (v === '1234') return 'No puedes usar la clave inicial.';
-    },
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    confirmButtonText: 'Guardar y Entrar',
-    confirmButtonColor: '#0d1b5e'
-  }).then(res => {
-    if (!res.isConfirmed) return;
-    fetch(URL_APPS_SCRIPT, {
-      method: 'POST',
-      body: JSON.stringify({ accion: 'actualizarClave', usuario, nuevaClave: res.value, correo }),
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    })
-    .then(r => r.json())
-    .then(r2 => {
-      if (r2.exito) {
-        Swal.fire('¡Listo!', 'Clave creada. Entrando...', 'success').then(() => SEGURIDAD_CAOP_redirigir(rol, usuario, correo));
-      } else {
-        Swal.fire('Error', r2.mensaje, 'error');
-      }
-    });
-  });
-}
-
-function SEGURIDAD_CAOP_olvideClave(event) {
-  event.preventDefault();
-  Swal.fire({
-    title: '📧 Recuperar clave',
-    text: 'Escribe el correo con el que te registraste.',
-    input: 'email',
-    inputLabel: 'Correo electrónico',
-    inputValidator: (v) => (!v || !v.includes('@')) ? 'Correo inválido.' : null,
-    showCancelButton: true,
-    confirmButtonText: 'Enviar',
-    confirmButtonColor: '#0d1b5e'
-  }).then(res => {
-    if (!res.isConfirmed) return;
-    fetch(URL_APPS_SCRIPT, {
-      method: 'POST',
-      body: JSON.stringify({ accion: 'recuperarClave', correo: res.value }),
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    })
-    .then(r => r.json())
-    .then(r2 => Swal.fire(r2.exito ? '¡Enviado!' : 'Error', r2.mensaje, r2.exito ? 'success' : 'error'));
-  });
-}
-
-function SEGURIDAD_CAOP_redirigir(rol, usuario, correo) {
-  const u = usuario.trim();
-  sessionStorage.setItem('usuario', u);
-  sessionStorage.setItem('usuarioLogueado', u);
-  sessionStorage.setItem('rol', rol.trim());
-  sessionStorage.setItem('correo', correo.trim());
-
-  // REDIRECCIÓN LIMPIA
-  if (u === 'Presidencia' || u === 'Despacho' || u === 'Observatorio') {
-    window.location.href = 'observatorio.html';
-  } else if (u.startsWith('OPT')) {
-    window.location.href = 'formulario.html';
-  } else {
-    window.location.href = 'index.html'; 
-  }
-}
+});
 </script>
 </body>
 </html>
