@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPOSTEL - Informe de Movilidad</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        /* Fondo Tecnológico con animación */
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: radial-gradient(circle at center, #1a2a6c, #0d1b5e, #000000);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Esferas decorativas (Simulando el logo y anillos de Ipostel) */
+        .bg-sphere {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #4a6cf7, #0d1b5e);
+            box-shadow: 0 0 50px rgba(74, 108, 247, 0.4);
+            animation: float 6s ease-in-out infinite;
+        }
+        .sphere-1 { width: 400px; height: 400px; top: -100px; left: -100px; opacity: 0.6; }
+        .sphere-2 { width: 250px; height: 250px; bottom: -50px; right: -50px; opacity: 0.4; animation-delay: 2s; }
+        
+        /* Anillos */
+        .ring {
+            position: absolute;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation: spin 20s linear infinite;
+        }
+        .ring-1 { width: 600px; height: 600px; border-top-color: rgba(74, 108, 247, 0.8); }
+        .ring-2 { width: 800px; height: 800px; animation-direction: reverse; border-bottom-color: rgba(74, 108, 247, 0.5); }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Tarjeta de Login */
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 30px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo-text {
+            color: #0d1b5e;
+            font-weight: 900;
+            letter-spacing: 2px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 0;
+        }
+
+        .subtitle {
+            color: #6c757d;
+            font-weight: 500;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 1px solid #ced4da;
+            background: #f8f9fa;
+        }
+        .form-control:focus {
+            box-shadow: 0 0 0 0.25rem rgba(13, 27, 94, 0.25);
+            border-color: #0d1b5e;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #0d1b5e, #1e3a8a);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(13, 27, 94, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Elementos animados de fondo -->
+    <div class="bg-sphere sphere-1"></div>
+    <div class="bg-sphere sphere-2"></div>
+    <div class="ring ring-1"></div>
+    <div class="ring ring-2"></div>
+
+    <!-- Formulario de Login -->
+    <div class="login-card">
+        <div class="text-center mb-4">
+            <!-- Logotipo Ipostel Simulado -->
+            <div style="font-size: 3rem; color: #0d1b5e; margin-bottom: 10px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="currentColor" class="bi bi-box-seam" viewBox="0 0 16 16">
+                  <path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5 8 5.961 14.154 3.5 8.186 1.113zM15 4.239l-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923l6.5 2.6zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464L7.443.184z"/>
+                </svg>
+            </div>
+            <h1 class="logo-text">IPOSTEL</h1>
+            <p class="subtitle">Revolucionando el correo</p>
+            <hr class="mb-4">
+            <h5 class="text-dark fw-bold mb-4">Informe de Movilidad</h5>
+        </div>
+
+        <form id="loginForm">
+            <div class="mb-3">
+                <label class="form-label text-muted fw-bold small">Usuario</label>
+                <input type="text" class="form-control" id="usuario" required autocomplete="username" placeholder="Ingrese su usuario">
+            </div>
+            <div class="mb-4">
+                <label class="form-label text-muted fw-bold small">Clave</label>
+                <input type="password" class="form-control" id="clave" required autocomplete="current-password" placeholder="Ingrese su clave">
+            </div>
+            <button type="submit" class="btn btn-primary w-100" id="btnLogin">Ingresar al Sistema</button>
+        </form>
+        
+        <div class="text-center mt-4">
+            <small class="text-muted">&copy; 2024 IPOSTEL - Todos los derechos reservados.</small>
+        </div>
+    </div>
+
+    <script>
+        // URL DE TU GOOGLE APPS SCRIPT
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnLogin');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Validando...';
+
+            const usuario = document.getElementById('usuario').value;
+            const clave = document.getElementById('clave').value;
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({ accion: 'login', usuario: usuario, clave: clave })
+                });
+                const data = await response.json();
+
+                if (data.exito) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Bienvenido',
+                        text: `Ingresando como: ${data.rol}`,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        const rol = data.rol;
+                        // Redirección según el rol
+                        if (rol.includes('Encaminamiento')) window.location.href = 'encaminamiento.html';
+                        else if (rol.includes('Seguimiento')) window.location.href = 'seguimiento.html';
+                        else if (rol.includes('CNC')) window.location.href = 'coordinador_cnc.html';
+                        else if (rol.includes('Estado')) window.location.href = 'estados.html';
+                        else if (rol.includes('Observatorio') || rol.includes('Presidencia') || rol.includes('Despacho') || rol.includes('Operaciones')) window.location.href = 'observatorio.html';
+                        else window.location.href = 'observatorio.html'; // Fallback
+                    });
+                } else {
+                    Swal.fire('Acceso Denegado', data.mensaje, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Ingresar al Sistema';
+                }
+            } catch (error) {
+                Swal.fire('Error de conexión', 'Verifica tu conexión a internet.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = 'Ingresar al Sistema';
+            }
+        });
+    </script>
+</body>
+</html>

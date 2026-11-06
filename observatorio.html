@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPOSTEL - Observatorio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f4f6f9; }
+        .navbar { background-color: #0d1b5e; }
+        .navbar-brand, .nav-link { color: white !important; }
+        .card-stat { border: none; border-radius: 10px; color: white; }
+        .bg-azul { background: linear-gradient(45deg, #0d1b5e, #1e3a8a); }
+        .bg-verde { background: linear-gradient(45deg, #198754, #20c997); }
+        .bg-amarillo { background: linear-gradient(45deg, #ffc107, #ffca2c); color: #333; }
+        .bg-rojo { background: linear-gradient(45deg, #dc3545, #f87171); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-graph-up me-2"></i>IPOSTEL - Observatorio</a>
+            <div class="d-flex">
+                <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <!-- Tarjetas de Resumen -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card card-stat bg-azul p-3 shadow">
+                    <h6 class="mb-1">Total Masters</h6>
+                    <h2 class="mb-0 fw-bold" id="statTotal">0</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-stat bg-verde p-3 shadow">
+                    <h6 class="mb-1">Total Piezas</h6>
+                    <h2 class="mb-0 fw-bold" id="statPiezas">0</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-stat bg-amarillo p-3 shadow">
+                    <h6 class="mb-1">Total Peso (Kg)</h6>
+                    <h2 class="mb-0 fw-bold" id="statPeso">0.0</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-stat bg-rojo p-3 shadow">
+                    <h6 class="mb-1">Masters Críticos</h6>
+                    <h2 class="mb-0 fw-bold" id="statCritico">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-pie-chart me-2"></i>Estado del Semáforo</h6>
+                    </div>
+                    <div class="card-body d-flex justify-content-center align-items-center">
+                        <div style="width: 300px; height: 300px;">
+                            <canvas id="graficoSemaforo"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-bar-chart me-2"></i>Resumen de Alertas</h6>
+                    </div>
+                    <div class="card-body d-flex justify-content-center align-items-center">
+                        <div style="width: 100%; height: 300px;">
+                            <canvas id="graficoBarras"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
+        let chartSemaforo = null;
+        let chartBarras = null;
+
+        document.addEventListener('DOMContentLoaded', cargarEstadisticas);
+
+        async function cargarEstadisticas() {
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({ accion: 'obtenerEstadisticas' })
+                });
+                const data = await response.json();
+
+                if (data.exito) {
+                    const s = data.stats;
+
+                    // Actualizar tarjetas
+                    document.getElementById('statTotal').textContent = s.total;
+                    document.getElementById('statPiezas').textContent = s.piezas;
+                    document.getElementById('statPeso').textContent = s.peso.toFixed(2);
+                    document.getElementById('statCritico').textContent = s.critico;
+
+                    // Gráfico de Torta (Semáforo)
+                    const ctxSemaforo = document.getElementById('graficoSemaforo').getContext('2d');
+                    if(chartSemaforo) chartSemaforo.destroy();
+                    chartSemaforo = new Chart(ctxSemaforo, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['OK', 'Retraso', 'Crítico', 'Extraviado'],
+                            datasets: [{
+                                data: [s.ok, s.retraso, s.critico, s.extraviado],
+                                backgroundColor: ['#198754', '#ffc107', '#dc3545', '#212529'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+                    });
+
+                    // Gráfico de Barras
+                    const ctxBarras = document.getElementById('graficoBarras').getContext('2d');
+                    if(chartBarras) chartBarras.destroy();
+                    chartBarras = new Chart(ctxBarras, {
+                        type: 'bar',
+                        data: {
+                            labels: ['OK', 'Retraso', 'Crítico', 'Extraviado'],
+                            datasets: [{
+                                label: 'Cantidad de Masters',
+                                data: [s.ok, s.retraso, s.critico, s.extraviado],
+                                backgroundColor: ['#198754', '#ffc107', '#dc3545', '#212529'],
+                                borderRadius: 5
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Error al cargar estadísticas", error);
+            }
+        }
+    </script>
+</body>
+</html>
