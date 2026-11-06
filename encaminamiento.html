@@ -20,6 +20,7 @@
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#"><i class="bi bi-box-seam me-2"></i>IPOSTEL - Encaminamiento</a>
             <div class="d-flex">
+                <button class="btn btn-warning btn-sm me-2 fw-bold text-dark" onclick="emitirReporte()"><i class="bi bi-file-earmark-pdf"></i> Emitir Reporte PDF</button>
                 <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
             </div>
         </div>
@@ -181,6 +182,30 @@
                 }
             } catch (error) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
+            }
+        }
+                async function emitirReporte() {
+            Swal.fire({
+                title: 'Generando Reporte...',
+                text: 'Por favor espere, esto puede tardar unos segundos.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({ accion: 'generarReporte' })
+                });
+                const data = await response.json();
+
+                if (data.exito) {
+                    Swal.fire('¡Enviado!', data.mensaje, 'success');
+                } else {
+                    Swal.fire('Error', data.mensaje, 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error de conexión', 'No se pudo generar el reporte.', 'error');
             }
         }
     </script>
