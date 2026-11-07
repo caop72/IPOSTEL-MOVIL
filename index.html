@@ -269,6 +269,11 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 showConfirmButton: false
             }).then(() => {
                 const rol = data.rol;
+                
+                // GUARDAR SESIÓN (corregido)
+                sessionStorage.setItem('usuario', usuario);
+                sessionStorage.setItem('rol', rol);
+
                 if (rol.includes('Encaminamiento')) window.location.href = 'encaminamiento.html';
                 else if (rol.includes('Seguimiento')) window.location.href = 'seguimiento.html';
                 else if (rol.includes('CNC')) window.location.href = 'coordinador_cnc.html';
