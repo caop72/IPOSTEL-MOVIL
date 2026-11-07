@@ -3,156 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPOSTEL - Observatorio</title>
+    <title>Observatorio - IPOSTEL Movilidad</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #f4f6f9; }
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .navbar { background-color: #0d1b5e; }
-        .navbar-brand, .nav-link { color: white !important; }
-        .card-stat { border: none; border-radius: 10px; color: white; }
-        .bg-azul { background: linear-gradient(45deg, #0d1b5e, #1e3a8a); }
-        .bg-verde { background: linear-gradient(45deg, #198754, #20c997); }
-        .bg-amarillo { background: linear-gradient(45deg, #ffc107, #ffca2c); color: #333; }
-        .bg-rojo { background: linear-gradient(45deg, #dc3545, #f87171); }
+        .card { border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: none; margin-bottom: 15px; }
+        .card-header { background-color: #fff; border-bottom: 1px solid #eee; font-weight: bold; color: #0d1b5e; border-radius: 15px 15px 0 0 !important; }
+        .chart-container { position: relative; height: 40vh; width: 100%; }
+        .nav-tabs .nav-link { color: #6c757d; font-weight: 600; }
+        .nav-tabs .nav-link.active { color: #0d1b5e; border-bottom: 3px solid #0d1b5e; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-graph-up me-2"></i>IPOSTEL - Observatorio</a>
-            <div class="d-flex">
-                <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
-            </div>
-        </div>
-    </nav>
+<nav class="navbar navbar-dark mb-3">
+  <div class="container-fluid">
+    <span class="navbar-brand mb-0 h5">📈 Observatorio - <span id="nombreUsuario">Cargando...</span></span>
+    <div class="d-flex gap-2">
+      <!-- ESTE ES EL BOTÓN QUE FALTABA -->
+      <button class="btn btn-outline-light btn-sm" onclick="abrirConfiguracion()">⚙️ Config</button>
+      <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </div>
+</nav>
 
-    <div class="container-fluid px-4">
-        <!-- Tarjetas de Resumen -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card card-stat bg-azul p-3 shadow">
-                    <h6 class="mb-1">Total Masters</h6>
-                    <h2 class="mb-0 fw-bold" id="statTotal">0</h2>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-stat bg-verde p-3 shadow">
-                    <h6 class="mb-1">Total Piezas</h6>
-                    <h2 class="mb-0 fw-bold" id="statPiezas">0</h2>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-stat bg-amarillo p-3 shadow">
-                    <h6 class="mb-1">Total Peso (Kg)</h6>
-                    <h2 class="mb-0 fw-bold" id="statPeso">0.0</h2>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-stat bg-rojo p-3 shadow">
-                    <h6 class="mb-1">Masters Críticos</h6>
-                    <h2 class="mb-0 fw-bold" id="statCritico">0</h2>
-                </div>
-            </div>
-        </div>
+<div class="container-fluid px-3">
 
-        <!-- Gráficos -->
-        <div class="row">
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header bg-white py-3">
-                        <h6 class="mb-0 fw-bold"><i class="bi bi-pie-chart me-2"></i>Estado del Semáforo</h6>
-                    </div>
-                    <div class="card-body d-flex justify-content-center align-items-center">
-                        <div style="width: 300px; height: 300px;">
-                            <canvas id="graficoSemaforo"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header bg-white py-3">
-                        <h6 class="mb-0 fw-bold"><i class="bi bi-bar-chart me-2"></i>Resumen de Alertas</h6>
-                    </div>
-                    <div class="card-body d-flex justify-content-center align-items-center">
-                        <div style="width: 100%; height: 300px;">
-                            <canvas id="graficoBarras"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <!-- FILTROS GENERALES -->
+  <div class="card mb-3">
+    <div class="card-header py-2">🔍 Filtros de Búsqueda</div>
+    <div class="card-body">
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-4">
+            <label class="form-label small fw-bold mb-1">Desde</label>
+            <input type="date" class="form-control form-control-sm" id="filtroDesde">
         </div>
+        <div class="col-6 col-md-4">
+            <label class="form-label small fw-bold mb-1">Hasta</label>
+            <input type="date" class="form-control form-control-sm" id="filtroHasta">
+        </div>
+        <div class="col-12 col-md-4 d-flex gap-2">
+          <button class="btn btn-primary btn-sm flex-fill" onclick="aplicarFiltros()">Aplicar Filtros</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">Limpiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PESTAÑAS -->
+  <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" onclick="cargarGeneral()">📊 Resumen General</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="estados-tab" data-bs-toggle="tab" data-bs-target="#estados" type="button" role="tab" onclick="cargarEstados()">📍 Por Estados</button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="myTabContent">
+    
+    <!-- PESTAÑA 1: GENERAL -->
+    <div class="tab-pane fade show active" id="general" role="tabpanel">
+      <div class="row g-2 mb-3">
+        <div class="col-6 col-md-3"><div class="card p-2 text-center border-start border-4 border-primary"><small class="text-muted fw-bold">Total Masters</small><h4 class="text-primary mb-0" id="totalMasters">0</h4></div></div>
+        <div class="col-6 col-md-3"><div class="card p-2 text-center border-start border-4 border-success"><small class="text-muted fw-bold">Total Piezas</small><h4 class="text-success mb-0" id="totalPiezas">0</h4></div></div>
+        <div class="col-6 col-md-3"><div class="card p-2 text-center border-start border-4 border-info"><small class="text-muted fw-bold">Peso Total (Kg)</small><h4 class="text-info mb-0" id="totalPeso">0</h4></div></div>
+        <div class="col-6 col-md-3"><div class="card p-2 text-center border-start border-4 border-danger"><small class="text-muted fw-bold">En Riesgo (Retrasos)</small><h4 class="text-danger mb-0" id="totalRetrasos">0</h4></div></div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6"><div class="card"><div class="card-header py-2">📊 Estado de los Masters</div><div class="card-body"><div class="chart-container"><canvas id="graficoEstatus"></canvas></div></div></div></div>
+        <div class="col-md-6"><div class="card"><div class="card-header py-2">🍩 Top Destinos (Piezas)</div><div class="card-body"><div class="chart-container"><canvas id="graficoDestinos"></canvas></div></div></div></div>
+      </div>
     </div>
 
-    <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
-        let chartSemaforo = null;
-        let chartBarras = null;
+    <!-- PESTAÑA 2: POR ESTADOS -->
+    <div class="tab-pane fade" id="estados" role="tabpanel">
+      <div class="row g-3 mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header py-2">📊 Comparativa de Volumen por Estado (Piezas)</div>
+                <div class="card-body">
+                    <div class="chart-container"><canvas id="graficoEstados"></canvas></div>
+                </div>
+            </div>
+        </div>
+      </div>
+      
+      <div class="card mb-3">
+        <div class="card-header py-2">📋 Detalle por Estado</div>
+        <div class="card-body p-0">
+          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-sm table-hover mb-0 text-center">
+              <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+                  <tr><th>Estado</th><th>Masters</th><th>Piezas</th><th>Peso (Kg)</th><th>Retrasos</th></tr>
+              </thead>
+              <tbody id="tablaEstados"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        document.addEventListener('DOMContentLoaded', cargarEstadisticas);
+  </div>
+</div>
 
-        async function cargarEstadisticas() {
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: new URLSearchParams({ accion: 'obtenerEstadisticas' })
-                });
-                const data = await response.json();
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // URL DE TU GOOGLE APPS SCRIPT
+  const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
+  
+  let chartEstatus, chartDestinos, chartEstados;
 
-                if (data.exito) {
-                    const s = data.stats;
+  document.addEventListener('DOMContentLoaded', function () {
+    const usuarioLogueado = (sessionStorage.getItem('usuario') || '').trim();
+    if (!usuarioLogueado) { window.location.href = 'index.html'; return; }
+    document.getElementById('nombreUsuario').innerText = usuarioLogueado;
+    aplicarFiltros(); // Carga la pestaña general por defecto
+  });
 
-                    // Actualizar tarjetas
-                    document.getElementById('statTotal').textContent = s.total;
-                    document.getElementById('statPiezas').textContent = s.piezas;
-                    document.getElementById('statPeso').textContent = s.peso.toFixed(2);
-                    document.getElementById('statCritico').textContent = s.critico;
+  function cerrarSesion() { sessionStorage.clear(); window.location.href = 'index.html'; }
 
-                    // Gráfico de Torta (Semáforo)
-                    const ctxSemaforo = document.getElementById('graficoSemaforo').getContext('2d');
-                    if(chartSemaforo) chartSemaforo.destroy();
-                    chartSemaforo = new Chart(ctxSemaforo, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['OK', 'Retraso', 'Crítico', 'Extraviado'],
-                            datasets: [{
-                                data: [s.ok, s.retraso, s.critico, s.extraviado],
-                                backgroundColor: ['#198754', '#ffc107', '#dc3545', '#212529'],
-                                borderWidth: 0
-                            }]
-                        },
-                        options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
-                    });
+  function obtenerFiltros() {
+    return { 
+        fechaInicio: document.getElementById('filtroDesde').value, 
+        fechaFin: document.getElementById('filtroHasta').value 
+    };
+  }
 
-                    // Gráfico de Barras
-                    const ctxBarras = document.getElementById('graficoBarras').getContext('2d');
-                    if(chartBarras) chartBarras.destroy();
-                    chartBarras = new Chart(ctxBarras, {
-                        type: 'bar',
-                        data: {
-                            labels: ['OK', 'Retraso', 'Crítico', 'Extraviado'],
-                            datasets: [{
-                                label: 'Cantidad de Masters',
-                                data: [s.ok, s.retraso, s.critico, s.extraviado],
-                                backgroundColor: ['#198754', '#ffc107', '#dc3545', '#212529'],
-                                borderRadius: 5
-                            }]
-                        },
-                        options: { 
-                            responsive: true, 
-                            maintainAspectRatio: false,
-                            plugins: { legend: { display: false } },
-                            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error("Error al cargar estadísticas", error);
-            }
-        }
-    </script>
+  function limpiarFiltros() {
+    document.getElementById('filtroDesde').value = ''; 
+    document.getElementById('filtroHasta').value = '';
+    aplicarFiltros();
+  }
+
+  function aplicarFiltros() {
+    if (document.getElementById('general-tab').classList.contains('active')) {
+        cargarGeneral();
+    } else {
+        cargarEstados();
+    }
+  }
+
+  // --- PESTAÑA GENERAL ---
+  function cargarGeneral() {
+    const filtros = obtenerFiltros();
+    fetch(URL_APPS_SCRIPT, { 
+        method: 'POST', 
+        body: new URLSearchParams({ accion: 'obtenerEstadisticas', ...filtros }) 
+    })
+    .then(res => res.json())
+    .then(resp => { 
+        if (resp.exito) renderizarGeneral(resp.stats); 
+    });
+  }
+
+  function renderizarGeneral(stats) {
+    document.getElementById('totalMasters').innerText = stats.total;
+    document.getElementById('totalPiezas').innerText = stats.piezas;
+    document.getElementById('totalPeso').innerText = stats.peso.toFixed(1);
+    document.getElementById('totalRetrasos').innerText = stats.retraso + stats.critico;
+
+    if (chartEstatus) chartEstatus.destroy();
+    chartEstatus = new Chart(document.getElementById('graficoEstatus').getContext('2d'), {
+      type: 'pie', 
+      data: { 
+          labels: ['A Tiempo', 'Retraso', 'Crítico', 'Extraviado'], 
+          datasets: [{ data: [stats.ok, stats.retraso, stats.critico, stats.extraviado], backgroundColor: ['#198754', '#ffc107', '#dc3545', '#6c757d'] }] 
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+
+  // --- PESTAÑA ESTADOS ---
+  function cargarEstados() {
+    const filtros = obtenerFiltros();
+    fetch(URL_APPS_SCRIPT, { 
+        method: 'POST', 
+        body: new URLSearchParams({ accion: 'obtenerEstadisticasPorEstado', ...filtros }) 
+    })
+    .then(res => res.json())
+    .then(resp => { 
+        if (resp.exito) renderizarEstados(resp.datos); 
+    });
+  }
+
+  function renderizarEstados(datos) {
+    const estados = Object.keys(datos);
+    const piezas = estados.map(e => datos[e].piezas);
+    
+    if (chartEstados) chartEstados.destroy();
+    chartEstados = new Chart(document.getElementById('graficoEstados').getContext('2d'), {
+      type: 'bar', 
+      data: { 
+          labels: estados, 
+          datasets: [{ label: 'Piezas', data: piezas, backgroundColor: '#00d2ff' }] 
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    const tbody = document.getElementById('tablaEstados');
+    let html = '';
+    estados.sort().forEach(estado => {
+      let d = datos[estado];
+      html += `<tr>
+        <td class="fw-bold">${estado}</td>
+        <td>${d.total}</td>
+        <td>${d.piezas}</td>
+        <td>${d.peso.toFixed(1)}</td>
+        <td class="${d.retrasos > 0 ? 'text-danger fw-bold' : 'text-success'}">${d.retrasos}</td>
+      </tr>`;
+    });
+    if(estados.length === 0) html = '<tr><td colspan="5">No hay datos en este rango de fechas.</td></tr>';
+    tbody.innerHTML = html;
+  }
+
+  // --- CONFIGURACIÓN ---
+  function abrirConfiguracion() {
+    Swal.fire({ title: 'Cargando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    fetch(URL_APPS_SCRIPT, { 
+        method: 'POST', 
+        body: new URLSearchParams({ accion: 'obtenerConfiguracion' }) 
+    })
+    .then(res => res.json())
+    .then(resp => { 
+        if (!resp.exito) return Swal.fire('Error', resp.mensaje, 'error'); 
+        mostrarModalConfiguracion(resp.config); 
+    })
+    .catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
+  }
+
+  function mostrarModalConfiguracion(config) {
+    let htmlForm = '<div style="text-align:left; max-height: 60vh; overflow-y: auto; padding: 5px;">';
+    config.forEach(item => {
+      const esCorreo = item.clave.includes('CORREO');
+      const icono = esCorreo ? '📧' : '📝';
+      htmlForm += `<div class="mb-3">
+                    <label class="form-label small fw-bold mb-1">${icono} ${item.clave}</label>
+                    <input type="text" class="form-control form-control-sm" id="cfg_${item.clave}" value="${item.valor}">
+                    <small class="text-muted" style="font-size: 0.75rem;">${item.descripcion}</small>
+                   </div>`;
+    });
+    htmlForm += '</div>';
+
+    Swal.fire({
+      title: '⚙️ Configuración',
+      html: htmlForm,
+      width: '600px',
+      showCancelButton: true,
+      confirmButtonText: '💾 Guardar',
+      confirmButtonColor: '#0d1b5e',
+      preConfirm: () => {
+        const cambios = [];
+        config.forEach(item => {
+          const nuevoValor = document.getElementById(`cfg_${item.clave}`).value.trim();
+          if (nuevoValor !== String(item.valor)) cambios.push({ clave: item.clave, valor: nuevoValor });
+        });
+        return cambios;
+      }
+    }).then((result) => { 
+        if (result.isConfirmed) { 
+            if (result.value.length === 0) return Swal.fire('Sin cambios', 'No modificaste nada.', 'info'); 
+            guardarConfiguracion(result.value); 
+        } 
+    });
+  }
+
+  function guardarConfiguracion(cambios) {
+    Swal.fire({ title: 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    let promesas = cambios.map(cambio => fetch(URL_APPS_SCRIPT, { 
+        method: 'POST', 
+        body: new URLSearchParams({ accion: 'actualizarConfiguracion', clave: cambio.clave, valor: cambio.valor }) 
+    }).then(res => res.json()));
+    
+    Promise.all(promesas).then(resultados => {
+      const errores = resultados.filter(r => !r.exito);
+      if (errores.length > 0) Swal.fire('Error', errores.map(e => e.mensaje).join('<br>'), 'error');
+      else Swal.fire({ title: '¡Guardado!', text: 'Configuración actualizada.', icon: 'success', timer: 2500, showConfirmButton: false });
+    }).catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
+  }
+</script>
 </body>
 </html>
