@@ -23,7 +23,6 @@
   <div class="container-fluid">
     <span class="navbar-brand mb-0 h5">📈 Observatorio - <span id="nombreUsuario">Cargando...</span></span>
     <div class="d-flex gap-2">
-      <!-- ESTE ES EL BOTÓN QUE FALTABA -->
       <button class="btn btn-outline-light btn-sm" onclick="abrirConfiguracion()">⚙️ Config</button>
       <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Salir</button>
     </div>
@@ -119,13 +118,26 @@
   let chartEstatus, chartDestinos, chartEstados;
 
   document.addEventListener('DOMContentLoaded', function () {
+    // VALIDACIÓN BLINDADA: Evita el rebote inmediato
     const usuarioLogueado = (sessionStorage.getItem('usuario') || '').trim();
-    if (!usuarioLogueado) { window.location.href = 'index.html'; return; }
+    
+    // Si no hay usuario, lo mandamos al login, PERO con un pequeño retraso para evitar bucles infinitos
+    if (!usuarioLogueado) { 
+        console.log("No hay sesión activa, redirigiendo al login...");
+        setTimeout(() => { window.location.href = 'index.html'; }, 100); 
+        return; 
+    }
+    
     document.getElementById('nombreUsuario').innerText = usuarioLogueado;
-    aplicarFiltros(); // Carga la pestaña general por defecto
+    
+    // Cargar datos iniciales
+    cargarGeneral(); 
   });
 
-  function cerrarSesion() { sessionStorage.clear(); window.location.href = 'index.html'; }
+  function cerrarSesion() { 
+      sessionStorage.clear(); 
+      window.location.href = 'index.html'; 
+  }
 
   function obtenerFiltros() {
     return { 
@@ -158,7 +170,8 @@
     .then(res => res.json())
     .then(resp => { 
         if (resp.exito) renderizarGeneral(resp.stats); 
-    });
+    })
+    .catch(err => console.error("Error cargando estadísticas:", err));
   }
 
   function renderizarGeneral(stats) {
@@ -167,6 +180,7 @@
     document.getElementById('totalPeso').innerText = stats.peso.toFixed(1);
     document.getElementById('totalRetrasos').innerText = stats.retraso + stats.critico;
 
+    // Gráfico de Estatus
     if (chartEstatus) chartEstatus.destroy();
     chartEstatus = new Chart(document.getElementById('graficoEstatus').getContext('2d'), {
       type: 'pie', 
@@ -188,13 +202,15 @@
     .then(res => res.json())
     .then(resp => { 
         if (resp.exito) renderizarEstados(resp.datos); 
-    });
+    })
+    .catch(err => console.error("Error cargando estados:", err));
   }
 
   function renderizarEstados(datos) {
     const estados = Object.keys(datos);
     const piezas = estados.map(e => datos[e].piezas);
     
+    // Gráfico
     if (chartEstados) chartEstados.destroy();
     chartEstados = new Chart(document.getElementById('graficoEstados').getContext('2d'), {
       type: 'bar', 
@@ -205,6 +221,7 @@
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
     });
 
+    // Tabla
     const tbody = document.getElementById('tablaEstados');
     let html = '';
     estados.sort().forEach(estado => {
