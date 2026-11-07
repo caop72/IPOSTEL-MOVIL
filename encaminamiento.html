@@ -19,7 +19,6 @@
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#"><i class="bi bi-box-seam me-2"></i>IPOSTEL - Encaminamiento</a>
             <div class="d-flex">
-                <!-- BOTÓN DE REPORTE PDF AGREGADO AQUÍ -->
                 <button class="btn btn-warning btn-sm me-2 fw-bold text-dark" onclick="emitirReporte()">
                     <i class="bi bi-file-earmark-pdf"></i> Emitir Reporte PDF
                 </button>
@@ -74,6 +73,11 @@
                             </div>
                             <button type="submit" class="btn btn-primary w-100 fw-bold">Guardar Master</button>
                         </form>
+                        
+                        <!-- BOTÓN DE CARGA MASIVA AGREGADO AQUÍ -->
+                        <button type="button" class="btn btn-outline-primary w-100 mt-2 fw-bold" onclick="abrirCargaMasiva()">
+                            <i class="bi bi-clipboard-data"></i> Carga Masiva (Pegar Texto)
+                        </button>
                     </div>
                 </div>
             </div>
@@ -113,6 +117,7 @@
 
         document.addEventListener('DOMContentLoaded', cargarMasters);
 
+        // Guardar Master Individual
         document.getElementById('formMaster').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
@@ -150,6 +155,7 @@
             btn.innerHTML = 'Guardar Master';
         });
 
+        // Cargar tabla
         async function cargarMasters() {
             const tbody = document.getElementById('tablaMasters');
             tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Cargando datos...</td></tr>';
@@ -183,7 +189,7 @@
             }
         }
 
-        // FUNCIÓN NUEVA PARA EL REPORTE PDF
+        // Emitir Reporte PDF
         async function emitirReporte() {
             Swal.fire({
                 title: 'Generando Reporte...',
@@ -207,6 +213,45 @@
             } catch (error) {
                 Swal.fire('Error de conexión', 'No se pudo generar el reporte.', 'error');
             }
+        }
+
+        // --- CARGA MASIVA ---
+        function abrirCargaMasiva() {
+            Swal.fire({
+                title: 'Carga Masiva de Masters',
+                html: `
+                    <p class="small text-muted text-start mb-2">Pega el texto copiado de Word o Excel. Formato: <b>Origen, Destino, Piezas, Peso, GuíaMRW</b> (separados por tabulación o coma).</p>
+                    <textarea id="textoMasivo" class="form-control" rows="8" placeholder="Ejemplo:&#10;Caracas	Zulia	15	10.5	123456789&#10;Caracas	Táchira	20	15.2	987654321"></textarea>
+                `,
+                width: '600px',
+                showCancelButton: true,
+                confirmButtonText: 'Procesar Carga',
+                confirmButtonColor: '#0d1b5e',
+                preConfirm: () => {
+                    const texto = document.getElementById('textoMasivo').value;
+                    if (!texto) return Swal.showValidationMessage('Por favor, pega el texto primero.');
+                    return texto;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    
+                    fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: new URLSearchParams({ accion: 'cargarMasivo', texto: result.value })
+                    })
+                    .then(res => res.json())
+                    .then(resp => {
+                        if (resp.exito) {
+                            Swal.fire('¡Éxito!', resp.mensaje, 'success');
+                            cargarMasters();
+                        } else {
+                            Swal.fire('Error', resp.mensaje, 'error');
+                        }
+                    })
+                    .catch(() => Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error'));
+                }
+            });
         }
     </script>
 </body>
