@@ -302,6 +302,19 @@
       else Swal.fire({ title: '¡Guardado!', text: 'Configuración actualizada.', icon: 'success', timer: 2500, showConfirmButton: false });
     }).catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
   }
+      <!-- BOTÓN DE REPORTES -->
+  <div class="row mb-4 mt-2" id="bloqueReportes">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header py-2">🚀 Generación de Reportes</div>
+        <div class="card-body text-end">
+          <button class="btn btn-warning text-dark fw-bold btn-sm" onclick="generarReporte()">
+            📄 Emitir Reporte PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </script>
 </body>
 </html>
