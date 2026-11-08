@@ -18,6 +18,12 @@
         .nav-tabs .nav-link.active { background-color: #0d1b5e !important; color: white !important; }
         .table th { background-color: #f8f9fa; font-size: 0.85rem; text-transform: uppercase; color: #6c757d; }
         .badge-vector { background-color: #e9ecef; color: #0d1b5e; font-weight: bold; padding: 5px 10px; border-radius: 5px; }
+        
+        /* Estilos para el Cuadro de Relación */
+        .tabla-relacion { border: 1px solid #dee2e6; width: 100%; margin-bottom: 20px; }
+        .tabla-relacion th { background-color: #e9ecef; text-align: center; border: 1px solid #dee2e6; padding: 8px; }
+        .tabla-relacion td { border: 1px solid #dee2e6; padding: 8px; }
+        .fila-total { background-color: #f8f9fa; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -26,7 +32,6 @@
   <div class="container-fluid">
     <span class="navbar-brand mb-0 h5">📈 Observatorio - <span id="nombreUsuario">Cargando...</span></span>
     <div class="d-flex gap-2">
-      <!-- BOTÓN DE MICRO ENTREGAS -->
       <a href="microentregas.html" class="btn btn-success btn-sm fw-bold text-white">
         <i class="bi bi-box-seam"></i> Auditoría Micro Entregas
       </a>
@@ -66,6 +71,9 @@
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="tablero-tab" data-bs-toggle="tab" data-bs-target="#tablero" type="button" role="tab" onclick="cargarTablero()">🛫 Tablero de Operaciones</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="relacion-tab" data-bs-toggle="tab" data-bs-target="#relacion" type="button" role="tab" onclick="cargarRelacion()">📋 Cuadro de Relación</button>
     </li>
   </ul>
 
@@ -108,6 +116,18 @@
               <tbody id="tablaTablero"></tbody>
             </table>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 3: CUADRO DE RELACIÓN -->
+    <div class="tab-pane fade" id="relacion" role="tabpanel">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white py-2">
+            <span>📋 Cuadro de Relación de Envíos y Recepciones</span>
+        </div>
+        <div class="card-body">
+            <div id="contenedorRelacion"></div>
         </div>
       </div>
     </div>
@@ -166,11 +186,14 @@
   function aplicarFiltros() {
     if (document.getElementById('general-tab').classList.contains('active')) {
         cargarGeneral();
-    } else {
+    } else if (document.getElementById('tablero-tab').classList.contains('active')) {
         cargarTablero();
+    } else {
+        cargarRelacion();
     }
   }
 
+  // --- PESTAÑA 1: GRAFICOS ---
   function cargarGeneral() {
     const filtros = obtenerFiltros();
     fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerEstadisticas', ...filtros }) })
@@ -199,6 +222,7 @@
     }
   }
 
+  // --- PESTAÑA 2: TABLERO DE OPERACIONES ---
   function cargarTablero() {
     const filtros = obtenerFiltros();
     const tbody = document.getElementById('tablaTablero');
@@ -243,6 +267,79 @@
     });
   }
 
+  // --- PESTAÑA 3: CUADRO DE RELACIÓN ---
+  function cargarRelacion() {
+    const filtros = obtenerFiltros();
+    const contenedor = document.getElementById('contenedorRelacion');
+    contenedor.innerHTML = '<div class="text-center py-4">Cargando cuadro de relación...</div>';
+
+    fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerResumenRelacion', ...filtros }) })
+    .then(res => res.json())
+    .then(resp => {
+        if (resp.exito) {
+            const estados = Object.keys(resp.datos).sort();
+            
+            if (estados.length === 0) {
+                contenedor.innerHTML = '<div class="text-center py-4 text-muted">No hay movimientos en este rango de fechas.</div>';
+                return;
+            }
+
+            let html = '<table class="tabla-relacion"><thead><tr><th style="width: 15%;">DESDE (Estado)</th><th style="width: 45%;">MASTERS ENVIADOS</th><th style="width: 40%;">MASTERS RECIBIDOS</th></tr></thead><tbody>';
+
+            let totalEnviadosGlobal = 0;
+            let totalRecibidosGlobal = 0;
+
+            estados.forEach(estado => {
+                const data = resp.datos[estado];
+                const enviadosArray = Object.entries(data.enviados);
+                const recibidosArray = Object.entries(data.recibidos);
+                
+                const totalEnv = enviadosArray.reduce((acc, curr) => acc + curr[1], 0);
+                const totalRec = recibidosArray.reduce((acc, curr) => acc + curr[1], 0);
+                
+                totalEnviadosGlobal += totalEnv;
+                totalRecibidosGlobal += totalRec;
+
+                // Si no tiene envíos ni recepciones, saltar
+                if (totalEnv === 0 && totalRec === 0) return;
+
+                const maxFilas = Math.max(enviadosArray.length, recibidosArray.length);
+                
+                for (let i = 0; i < maxFilas; i++) {
+                    html += '<tr>';
+                    
+                    // Columna del estado (solo en la primera fila del grupo)
+                    if (i === 0) {
+                        html += `<td rowspan="${maxFilas}" class="fw-bold text-center align-middle" style="background-color: #f1f3f5; font-size: 1.1rem;">${estado}</td>`;
+                    }
+
+                    // Columna de enviados
+                    if (enviadosArray[i]) {
+                        html += `<td><span class="fw-bold">${enviadosArray[i][1]}</span> <i class="bi bi-arrow-right"></i> ${enviadosArray[i][0]}</td>`;
+                    } else {
+                        html += '<td></td>';
+                    }
+
+                    // Columna de recibidos
+                    if (recibidosArray[i]) {
+                        html += `<td><span class="fw-bold">${recibidosArray[i][1]}</span> <i class="bi bi-arrow-left"></i> ${recibidosArray[i][0]}</td>`;
+                    } else {
+                        html += '<td></td>';
+                    }
+
+                    html += '</tr>';
+                }
+            });
+
+            html += `<tr class="fila-total"><td class="text-center">TOTAL</td><td>${totalEnviadosGlobal} Masters Enviados</td><td>${totalRecibidosGlobal} Masters Recibidos</td></tr>`;
+            html += '</tbody></table>';
+
+            contenedor.innerHTML = html;
+        }
+    });
+  }
+
+  // --- FUNCIONES DE CONFIGURACION Y REPORTES ---
   function abrirConfiguracion() {
     Swal.fire({ title: 'Cargando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerConfiguracion' }) })
