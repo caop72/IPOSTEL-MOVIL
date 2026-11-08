@@ -52,12 +52,12 @@
         <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active fw-bold" id="recibidos-tab" data-bs-toggle="tab" data-bs-target="#recibidos" type="button" role="tab" onclick="cargarPendientes()">
-                    📥 Paquetes Recibidos (Pendientes de Entrega)
+                    📥 Paquetes Recibidos
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link fw-bold" id="enviados-tab" data-bs-toggle="tab" data-bs-target="#enviados" type="button" role="tab" onclick="cargarEnviados()">
-                    📤 Paquetes Despachados (Enviados)
+                    📤 Paquetes Despachados
                 </button>
             </li>
         </ul>
@@ -90,7 +90,7 @@
                 </div>
             </div>
 
-            <!-- PESTAÑA 2: ENVIADOS (CON BOTÓN DE CARGA) -->
+            <!-- PESTAÑA 2: DESPACHADOS -->
             <div class="tab-pane fade" id="enviados" role="tabpanel">
                 <div class="card shadow-sm">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
@@ -214,13 +214,11 @@
                 btn.disabled = true;
                 btn.innerHTML = 'Guardando...';
 
-                // El origen es la OPT seleccionada en el selector principal
-                const estadoActual = document.getElementById('selectEstadoOPT').value;
                 const optActual = document.getElementById('selectNombreOPT').value;
 
                 const datos = {
                     accion: 'crearMaster',
-                    origen: optActual, // El origen es la OPT (o el estado)
+                    origen: optActual, 
                     destino: document.getElementById('destinoEnvio').value,
                     piezas: document.getElementById('piezasEnvio').value,
                     peso: document.getElementById('pesoEnvio').value,
@@ -238,7 +236,7 @@
                         Swal.fire('¡Guardado!', 'El envío ha sido registrado.', 'success');
                         modalEnvio.hide();
                         document.getElementById('formCargaEnvio').reset();
-                        cargarEnviados(); // Recargar la tabla de enviados
+                        cargarEnviados();
                     } else {
                         Swal.fire('Error', data.mensaje, 'error');
                     }
@@ -327,7 +325,6 @@
         }
 
         async function cargarEnviados() {
-            const estado = document.getElementById('selectEstadoOPT').value;
             const opt = document.getElementById('selectNombreOPT').value;
             const tbody = document.getElementById('tablaEnviados');
 
@@ -339,7 +336,6 @@
             tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Cargando datos...</td></tr>';
 
             try {
-                // Aquí usamos la función obtenerMasters y filtramos en el cliente
                 const response = await fetch(URL_APPS_SCRIPT, {
                     method: 'POST',
                     body: new URLSearchParams({ accion: 'obtenerMasters' })
@@ -347,7 +343,6 @@
                 const data = await response.json();
 
                 if (data.exito) {
-                    // Filtrar solo los que tienen origen = OPT
                     const enviados = data.masters.filter(m => m.origen === opt);
 
                     tbody.innerHTML = '';
