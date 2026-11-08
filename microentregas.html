@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPOSTEL - Micro Entregas (CNC)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar { background-color: #0d1b5e; }
+        .navbar-brand, .nav-link { color: white !important; }
+        .table th { background-color: #f8f9fa; font-size: 0.85rem; text-transform: uppercase; color: #6c757d; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-box-seam me-2"></i>IPOSTEL - Micro Entregas (Auditoría CNC)</a>
+            <div class="d-flex">
+                <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        
+        <!-- FILTROS -->
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body py-2">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold mb-1">Desde</label>
+                        <input type="date" class="form-control form-control-sm" id="filtroDesde">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold mb-1">Hasta</label>
+                        <input type="date" class="form-control form-control-sm" id="filtroHasta">
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary btn-sm w-100" onclick="cargarMicroEntregas()">Aplicar Filtros</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLERO -->
+        <div class="card shadow-sm border-primary">
+            <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">📦 Control de Entregas al Destinatario (OPT)</h5>
+                <span class="badge bg-light text-dark" id="countMicro">0 Registros</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 65vh; overflow-y: auto;">
+                    <table class="table table-hover mb-0 align-middle text-center">
+                        <thead style="position: sticky; top: 0; z-index: 1;">
+                            <tr>
+                                <th>Código Master</th>
+                                <th>OPT Responsable</th>
+                                <th>Piezas</th>
+                                <th>Fecha Recepción</th>
+                                <th>Tiempo en OPT</th>
+                                <th>Estatus</th>
+                                <th>Fecha Entrega Final</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaMicro">
+                            <tr><td colspan="7" class="text-center py-4">Cargando datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('filtroDesde').value = hoy;
+            document.getElementById('filtroHasta').value = hoy;
+            cargarMicroEntregas();
+        });
+
+        async function cargarMicroEntregas() {
+            const tbody = document.getElementById('tablaMicro');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Cargando datos...</td></tr>';
+
+            const filtros = {
+                fechaInicio: document.getElementById('filtroDesde').value,
+                fechaFin: document.getElementById('filtroHasta').value
+            };
+
+            try {
+                const response = await fetch(URL_APPS_SCRIPT, {
+                    method: 'POST',
+                    body: new URLSearchParams({ accion: 'obtenerMicroEntregas', ...filtros })
+                });
+                const data = await response.json();
+
+                if (data.exito) {
+                    tbody.innerHTML = '';
+                    document.getElementById('countMicro').innerText = data.datos.length + ' Registros';
+
+                    if (data.datos.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No hay entregas registradas en este rango de fechas.</td></tr>';
+                        return;
+                    }
+
+                    data.datos.forEach(m => {
+                        // Lógica de colores para el estatus
+                        let badgeEstatus = 'bg-secondary';
+                        let textoEstatus = m.estatus;
+                        let filaClase = '';
+
+                        if (m.estatus === 'En_OPT') { 
+                            badgeEstatus = 'bg-warning text-dark'; 
+                            textoEstatus = 'En Custodia (Pendiente)'; 
+                            if (m.dias >= 2) filaClase = 'table-danger'; // Si tiene más de 2 días en la OPT, alerta roja
+                            else if (m.dias >= 1) filaClase = 'table-warning';
+                        } 
+                        else if (m.estatus === 'Entregado_Final') { 
+                            badgeEstatus = 'bg-success'; 
+                            textoEstatus = 'Entregado al Ciudadano'; 
+                        }
+
+                        tbody.innerHTML += `
+                            <tr class="${filaClase}">
+                                <td class="fw-bold text-primary">${m.idMaster}</td>
+                                <td>${m.optDestino}</td>
+                                <td>${m.piezas}</td>
+                                <td>${m.fechaRecepcion}</td>
+                                <td>
+                                    <span class="fw-bold">${m.dias} día(s)</span>
+                                </td>
+                                <td><span class="badge ${badgeEstatus}">${textoEstatus}</span></td>
+                                <td>${m.fechaEntrega}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
+            }
+        }
+    </script>
+</body>
+</html>
