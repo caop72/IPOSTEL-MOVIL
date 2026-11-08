@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPOSTEL - Panel de Estados</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar { background-color: #0d1b5e; }
+        .navbar-brand, .nav-link { color: white !important; }
+        .table-warning { background-color: #fff3cd !important; }
+        .table-danger { background-color: #f8d7da !important; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="bi bi-geo-alt me-2"></i>IPOSTEL - Estados (<span id="nombreEstado">Cargando...</span>)
+            </a>
+            <div class="d-flex">
+                <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-box-seam me-2"></i>Masters en Tránsito hacia mi Estado</h5>
+                <button class="btn btn-outline-primary btn-sm" onclick="cargarEnvios()">
+                    <i class="bi bi-arrow-clockwise"></i> Actualizar
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID Master</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Piezas</th>
+                                <th>Peso (Kg)</th>
+                                <th>Estatus</th>
+                                <th>Foto Balanza</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaEnvios">
+                            <tr><td colspan="7" class="text-center py-4">Cargando datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // URL DE TU GOOGLE APPS SCRIPT
+        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
+
+        // Obtener el usuario logueado (debe ser el nombre del estado, ej: "Zulia")
+        const usuarioLogueado = (sessionStorage.getItem('usuario') || '').trim();
+        const rolUsuario = (sessionStorage.getItem('rol') || '').trim();
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!usuarioLogueado) {
+                window.location.href = 'index.html';
+                return;
+            }
+            document.getElementById('nombreEstado').innerText = usuarioLogueado;
+            cargarEnvios();
+        });
+
+        function cerrarSesion() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // Cargar los Masters que van hacia el estado del usuario
+        async function cargarEnvios() {
+            const tbody = document.getElementById('tablaEnvios');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Cargando datos...</td></tr>';
+
+            try {
+                const response = await fetch(URL_APPS_SCRIPT, {
+                    method: 'POST',
+                    body: new URLSearchParams({ accion: 'obtenerEnviosPorEstado', estado: usuarioLogueado })
+                });
+                const data = await response.json();
+
+                if (data.exito) {
+                    tbody.innerHTML = '';
+                    if (data.envios.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No hay Masters registrados para su estado.</td></tr>';
+                        return;
+                    }
+                    data.envios.forEach(m => {
+                        // Aplicar semáforo de color según estatus
+                        let claseFila = '';
+                        let badgeEstatus = 'bg-secondary';
+                        if (m.estatus === 'Creado' || m.estatus === 'En_Transito') { claseFila = 'table-warning'; badgeEstatus = 'bg-warning text-dark'; }
+                        else if (m.estatus === 'Retrasado' || m.estatus === 'Critico') { claseFila = 'table-danger'; badgeEstatus = 'bg-danger'; }
+
+                        tbody.innerHTML += `
+                            <tr class="${claseFila}">
+                                <td class="fw-bold">${m.id}</td>
+                                <td>${m.origen}</td>
+                                <td>${m.destino}</td>
+                                <td>${m.piezas}</td>
+                                <td>${m.peso}</td>
+                                <td><span class="badge ${badgeEstatus}">${m.estatus}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-info" onclick="abrirSubidaFoto('${m.id}')">
+                                        <i class="bi bi-camera"></i> Subir Foto
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
+            }
+        }
+
+        // --- SUBIR FOTO DESDE EL ESTADO ---
+        function abrirSubidaFoto(idMaster) {
+            Swal.fire({
+                title: 'Subir Foto de Balanza',
+                html: `
+                    <p class="small text-muted mb-2">Master: <b>${idMaster}</b></p>
+                    <input type="file" id="fotoInput" accept="image/*" capture="environment" class="form-control">
+                    <small class="text-muted mt-2 d-block">La imagen se comprimirá automáticamente.</small>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Subir Foto',
+                confirmButtonColor: '#0d1b5e',
+                preConfirm: () => {
+                    const file = document.getElementById('fotoInput').files[0];
+                    if (!file) return Swal.showValidationMessage('Selecciona una foto.');
+                    
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = (e) => {
+                            const img = new Image();
+                            img.src = e.target.result;
+                            img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                const MAX_WIDTH = 800; // Comprimir para ahorrar espacio
+                                const scaleSize = MAX_WIDTH / img.width;
+                                canvas.width = MAX_WIDTH;
+                                canvas.height = img.height * scaleSize;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                                resolve({ idMaster: idMaster, imagen: dataUrl });
+                            };
+                        };
+                        reader.onerror = (error) => reject(error);
+                    });
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Subiendo...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    fetch(URL_APPS_SCRIPT, {
+                        method: 'POST',
+                        body: new URLSearchParams({ accion: 'subirFotoBalanza', idMaster: result.value.idMaster, imagen: result.value.imagen })
+                    })
+                    .then(res => res.json())
+                    .then(resp => {
+                        if (resp.exito) {
+                            Swal.fire('¡Subida!', 'La foto se guardó correctamente.', 'success');
+                            cargarEnvios(); // Recargar la tabla
+                        } else {
+                            Swal.fire('Error', resp.mensaje, 'error');
+                        }
+                    })
+                    .catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
+                }
+            });
+        }
+    </script>
+</body>
+</html>
