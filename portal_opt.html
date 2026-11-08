@@ -42,43 +42,161 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button class="btn btn-primary w-100" onclick="cargarPendientes()">Ver Paquetes</button>
+                        <button class="btn btn-primary w-100" onclick="cargarTodo()">Cargar Datos</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TABLA DE PAQUETES -->
-        <div class="card shadow-sm">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-box-seam me-2"></i>Paquetes Pendientes de Entrega</h5>
-                <button class="btn btn-outline-primary btn-sm" onclick="cargarPendientes()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+        <!-- PESTAÑAS -->
+        <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold" id="recibidos-tab" data-bs-toggle="tab" data-bs-target="#recibidos" type="button" role="tab" onclick="cargarPendientes()">
+                    📥 Paquetes Recibidos (Pendientes de Entrega)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold" id="enviados-tab" data-bs-toggle="tab" data-bs-target="#enviados" type="button" role="tab" onclick="cargarEnviados()">
+                    📤 Paquetes Despachados (Enviados)
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- PESTAÑA 1: RECIBIDOS -->
+            <div class="tab-pane fade show active" id="recibidos" role="tabpanel">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0 fw-bold text-dark">Paquetes Pendientes de Entrega</h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="cargarPendientes()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID Master</th>
+                                        <th>Piezas</th>
+                                        <th>Fecha Recepción</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaPendientes">
+                                    <tr><td colspan="4" class="text-center py-4">Seleccione su Estado y OPT.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>ID Master</th>
-                                <th>Piezas</th>
-                                <th>Fecha Recepción</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaPendientes">
-                            <tr><td colspan="4" class="text-center py-4">Seleccione su Estado y OPT.</td></tr>
-                        </tbody>
-                    </table>
+
+            <!-- PESTAÑA 2: ENVIADOS (CON BOTÓN DE CARGA) -->
+            <div class="tab-pane fade" id="enviados" role="tabpanel">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0 fw-bold text-dark">Paquetes Despachados</h5>
+                        <div>
+                            <button class="btn btn-success btn-sm me-2" onclick="abrirCargaEnvio()">
+                                <i class="bi bi-plus-circle"></i> Cargar Nuevo Envío
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="cargarEnviados()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID Master</th>
+                                        <th>Destino</th>
+                                        <th>Piezas</th>
+                                        <th>Peso (Kg)</th>
+                                        <th>Estatus</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaEnviados">
+                                    <tr><td colspan="5" class="text-center py-4">Seleccione su Estado y OPT.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- MODAL PARA CARGA DE ENVÍO -->
+    <div class="modal fade" id="modalCargaEnvio" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold">Cargar Nuevo Envío desde mi OPT</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCargaEnvio">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Estado Destino</label>
+                            <select class="form-select" id="destinoEnvio" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Caracas">Caracas</option>
+                                <option value="Amazonas">Amazonas</option>
+                                <option value="Anzoátegui">Anzoátegui</option>
+                                <option value="Apure">Apure</option>
+                                <option value="Aragua">Aragua</option>
+                                <option value="Barinas">Barinas</option>
+                                <option value="Bolívar">Bolívar</option>
+                                <option value="Carabobo">Carabobo</option>
+                                <option value="Cojedes">Cojedes</option>
+                                <option value="Delta Amacuro">Delta Amacuro</option>
+                                <option value="Falcón">Falcón</option>
+                                <option value="Guárico">Guárico</option>
+                                <option value="La Guaira">La Guaira</option>
+                                <option value="Lara">Lara</option>
+                                <option value="Mérida">Mérida</option>
+                                <option value="Miranda">Miranda</option>
+                                <option value="Monagas">Monagas</option>
+                                <option value="Nueva Esparta">Nueva Esparta</option>
+                                <option value="Portuguesa">Portuguesa</option>
+                                <option value="Sucre">Sucre</option>
+                                <option value="Táchira">Táchira</option>
+                                <option value="Trujillo">Trujillo</option>
+                                <option value="Yaracuy">Yaracuy</option>
+                                <option value="Zulia">Zulia</option>
+                            </select>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Piezas</label>
+                                <input type="number" class="form-control" id="piezasEnvio" required min="1">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Peso (Kg)</label>
+                                <input type="number" step="0.1" class="form-control" id="pesoEnvio" required min="0.1">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">N° Guía MRW (Opcional)</label>
+                            <input type="text" class="form-control" id="guiaEnvio" placeholder="Opcional">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100" id="btnGuardarEnvio">Guardar Envío</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (para el modal) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
+        let modalEnvio;
 
         document.addEventListener('DOMContentLoaded', async function () {
-            // 1. Cargar los estados al iniciar
+            modalEnvio = new bootstrap.Modal(document.getElementById('modalCargaEnvio'));
+            
+            // Cargar estados
             const resp = await fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerEstadosOPT' }) });
             const data = await resp.json();
             
@@ -88,6 +206,48 @@
                     selectEstado.innerHTML += `<option value="${est}">${est}</option>`;
                 });
             }
+
+            // Evento para guardar el envío
+            document.getElementById('formCargaEnvio').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btnGuardarEnvio');
+                btn.disabled = true;
+                btn.innerHTML = 'Guardando...';
+
+                // El origen es la OPT seleccionada en el selector principal
+                const estadoActual = document.getElementById('selectEstadoOPT').value;
+                const optActual = document.getElementById('selectNombreOPT').value;
+
+                const datos = {
+                    accion: 'crearMaster',
+                    origen: optActual, // El origen es la OPT (o el estado)
+                    destino: document.getElementById('destinoEnvio').value,
+                    piezas: document.getElementById('piezasEnvio').value,
+                    peso: document.getElementById('pesoEnvio').value,
+                    guiaMrw: document.getElementById('guiaEnvio').value
+                };
+
+                try {
+                    const response = await fetch(URL_APPS_SCRIPT, {
+                        method: 'POST',
+                        body: new URLSearchParams(datos)
+                    });
+                    const data = await response.json();
+
+                    if (data.exito) {
+                        Swal.fire('¡Guardado!', 'El envío ha sido registrado.', 'success');
+                        modalEnvio.hide();
+                        document.getElementById('formCargaEnvio').reset();
+                        cargarEnviados(); // Recargar la tabla de enviados
+                    } else {
+                        Swal.fire('Error', data.mensaje, 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error de conexión', 'No se pudo conectar.', 'error');
+                }
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar Envío';
+            });
         });
 
         async function cargarOPTsDelEstado() {
@@ -115,6 +275,11 @@
             } else {
                 selectOPT.innerHTML = '<option value="">No hay OPTs en este estado</option>';
             }
+        }
+
+        function cargarTodo() {
+            cargarPendientes();
+            cargarEnviados();
         }
 
         async function cargarPendientes() {
@@ -159,6 +324,65 @@
             } catch (error) {
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
             }
+        }
+
+        async function cargarEnviados() {
+            const estado = document.getElementById('selectEstadoOPT').value;
+            const opt = document.getElementById('selectNombreOPT').value;
+            const tbody = document.getElementById('tablaEnviados');
+
+            if (!opt) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Por favor, seleccione una OPT.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Cargando datos...</td></tr>';
+
+            try {
+                // Aquí usamos la función obtenerMasters y filtramos en el cliente
+                const response = await fetch(URL_APPS_SCRIPT, {
+                    method: 'POST',
+                    body: new URLSearchParams({ accion: 'obtenerMasters' })
+                });
+                const data = await response.json();
+
+                if (data.exito) {
+                    // Filtrar solo los que tienen origen = OPT
+                    const enviados = data.masters.filter(m => m.origen === opt);
+
+                    tbody.innerHTML = '';
+                    if (enviados.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay envíos registrados desde esta OPT.</td></tr>';
+                        return;
+                    }
+                    enviados.forEach(m => {
+                        let badgeEstatus = 'bg-secondary';
+                        if (m.estatus === 'Creado' || m.estatus === 'En_Transito') badgeEstatus = 'bg-warning text-dark';
+                        else if (m.estatus === 'Entregado') badgeEstatus = 'bg-success';
+                        
+                        tbody.innerHTML += `
+                            <tr>
+                                <td class="fw-bold">${m.id}</td>
+                                <td>${m.destino}</td>
+                                <td>${m.piezas}</td>
+                                <td>${m.peso}</td>
+                                <td><span class="badge ${badgeEstatus}">${m.estatus}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
+            }
+        }
+
+        function abrirCargaEnvio() {
+            const opt = document.getElementById('selectNombreOPT').value;
+            if (!opt) {
+                Swal.fire('Atención', 'Primero seleccione su Estado y OPT.', 'warning');
+                return;
+            }
+            modalEnvio.show();
         }
 
         async function confirmarEntrega(idMaster, optDestino) {
