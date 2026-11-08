@@ -156,10 +156,10 @@
             btn.innerHTML = 'Guardar Master';
         });
 
-        // Cargar tabla
+                // Cargar tabla
         async function cargarMasters() {
             const tbody = document.getElementById('tablaMasters');
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Cargando datos...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Cargando datos...</td></tr>'; // Cambiado a 6
 
             try {
                 const response = await fetch(SCRIPT_URL, {
@@ -171,9 +171,10 @@
                 if (data.exito) {
                     tbody.innerHTML = '';
                     if (data.masters.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay Masters registrados.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No hay Masters registrados.</td></tr>'; // Cambiado a 6
                     }
                     data.masters.forEach(m => {
+                        // CORREGIDO: Todo el contenido dentro del <tr>
                         tbody.innerHTML += `
                             <tr>
                                 <td class="fw-bold">${m.id}</td>
@@ -181,12 +182,17 @@
                                 <td>${m.destino}</td>
                                 <td>${m.piezas}</td>
                                 <td><span class="badge bg-secondary">${m.estatus}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-info" onclick="abrirSubidaFoto('${m.id}')">
+                                        <i class="bi bi-camera"></i> Subir
+                                    </button>
+                                </td>
                             </tr>
                         `;
                     });
                 }
             } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Error al cargar datos.</td></tr>'; // Cambiado a 6
             }
         }
 
@@ -254,6 +260,59 @@
                 }
             });
         }
+        function abrirSubidaFoto(idMaster) {
+    Swal.fire({
+        title: 'Subir Foto de Balanza',
+        html: `
+            <p class="small text-muted mb-2">Master: <b>${idMaster}</b></p>
+            <input type="file" id="fotoInput" accept="image/*" capture="environment" class="form-control">
+            <small class="text-muted mt-2 d-block">La imagen se comprimirá automáticamente.</small>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Subir Foto',
+        confirmButtonColor: '#0d1b5e',
+        preConfirm: () => {
+            const file = document.getElementById('fotoInput').files[0];
+            if (!file) return Swal.showValidationMessage('Selecciona una foto.');
+            
+            return new Promise((resolve, reject) => {
+                // Comprimir la imagen antes de enviar (para no saturar el Drive)
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800; // Reducir tamaño para ahorrar espacio
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7); // Calidad 70%
+                        resolve({ idMaster: idMaster, imagen: dataUrl });
+                    };
+                };
+                reader.onerror = (error) => reject(error);
+            });
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({ title: 'Subiendo...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: new URLSearchParams({ accion: 'subirFotoBalanza', idMaster: result.value.idMaster, imagen: result.value.imagen })
+            })
+            .then(res => res.json())
+            .then(resp => {
+                if (resp.exito) Swal.fire('¡Subida!', 'La foto se guardó correctamente.', 'success');
+                else Swal.fire('Error', resp.mensaje, 'error');
+            })
+            .catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
+        }
+    });
+}
     </script>
 </body>
 </html>
