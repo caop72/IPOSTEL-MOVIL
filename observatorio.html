@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Observatorio - IPOSTEL Movilidad</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -25,6 +26,10 @@
   <div class="container-fluid">
     <span class="navbar-brand mb-0 h5">📈 Observatorio - <span id="nombreUsuario">Cargando...</span></span>
     <div class="d-flex gap-2">
+      <!-- BOTÓN DE MICRO ENTREGAS -->
+      <a href="microentregas.html" class="btn btn-success btn-sm fw-bold text-white">
+        <i class="bi bi-box-seam"></i> Auditoría Micro Entregas
+      </a>
       <button class="btn btn-outline-light btn-sm" onclick="abrirConfiguracion()">⚙️ Config</button>
       <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Salir</button>
     </div>
@@ -139,7 +144,6 @@
     }
     document.getElementById('nombreUsuario').innerText = usuarioLogueado;
 
-    // PONER FECHA DE HOY POR DEFECTO
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById('filtroDesde').value = hoy;
     document.getElementById('filtroHasta').value = hoy;
@@ -167,7 +171,6 @@
     }
   }
 
-  // --- PESTAÑA 1: GRAFICOS ---
   function cargarGeneral() {
     const filtros = obtenerFiltros();
     fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerEstadisticas', ...filtros }) })
@@ -196,7 +199,6 @@
     }
   }
 
-  // --- PESTAÑA 2: TABLERO DE OPERACIONES ---
   function cargarTablero() {
     const filtros = obtenerFiltros();
     const tbody = document.getElementById('tablaTablero');
@@ -241,7 +243,6 @@
     });
   }
 
-  // --- FUNCIONES DE CONFIGURACION Y REPORTES ---
   function abrirConfiguracion() {
     Swal.fire({ title: 'Cargando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerConfiguracion' }) })
