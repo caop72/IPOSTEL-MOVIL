@@ -261,6 +261,8 @@
         if (resp.exito) {
             tbody.innerHTML = '';
             document.getElementById('countTablero').innerText = resp.datos.length + ' Registros';
+            document.getElementById('countTransito').innerText = resp.resumen.enTransito;
+            document.getElementById('countRetrasados').innerText = resp.resumen.retrasados;
             
             if (resp.datos.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay operaciones en este rango de fechas.</td></tr>';
@@ -270,23 +272,50 @@
             resp.datos.forEach(op => {
                 let badgeAlerta = 'bg-success';
                 let textoAlerta = 'A Tiempo';
-                if (op.alerta === 'RETRASO') { badgeAlerta = 'bg-warning text-dark'; textoAlerta = 'Retraso'; }
-                else if (op.alerta === 'CRITICO') { badgeAlerta = 'bg-danger'; textoAlerta = 'Crítico'; }
-                else if (op.alerta === 'EXTRAVIADO') { badgeAlerta = 'bg-dark'; textoAlerta = 'Extraviado'; }
+                let iconoAlerta = 'bi-check-circle';
+
+                if (op.estaRetrasado) { 
+                    badgeAlerta = 'bg-danger'; 
+                    textoAlerta = 'RETRASADO'; 
+                    iconoAlerta = 'bi-exclamation-triangle';
+                } 
+                else if (!op.haLlegado && op.alerta === 'RETRASO') { 
+                    badgeAlerta = 'bg-warning text-dark'; 
+                    textoAlerta = 'En Riesgo'; 
+                    iconoAlerta = 'bi-clock';
+                }
+                else if (!op.haLlegado) {
+                    badgeAlerta = 'bg-primary'; 
+                    textoAlerta = 'En Tránsito'; 
+                    iconoAlerta = 'bi-truck';
+                }
+                else if (op.haLlegado) {
+                    badgeAlerta = 'bg-success'; 
+                    textoAlerta = 'Llegó a Destino'; 
+                    iconoAlerta = 'bi-check-circle';
+                }
+
+                // Resaltar la fila completa si está retrasado
+                let claseFila = op.estaRetrasado ? 'table-danger' : '';
 
                 tbody.innerHTML += `
-                    <tr>
+                    <tr class="${claseFila}">
                         <td class="fw-bold text-primary">${op.id}</td>
                         <td><span class="badge-vector">${op.vector}</span></td>
                         <td>
                             <div class="small text-muted">${op.fechaSalida}</div>
-                            <div class="small fw-bold">Hace ${op.dias} día(s)</div>
+                            <div class="small fw-bold">${op.dias}d ${op.horas % 24}h</div>
                         </td>
                         <td>
                             <span class="badge bg-secondary mb-1">${op.estatus}</span>
                             ${op.guiaMrw ? `<br><small class="text-muted">MRW: ${op.guiaMrw}</small>` : ''}
                         </td>
-                        <td><span class="badge ${badgeAlerta}">${textoAlerta}</span></td>
+                        <td>
+                            <span class="badge ${badgeAlerta}">
+                                <i class="bi ${iconoAlerta}"></i> ${textoAlerta}
+                            </span>
+                            ${op.estaRetrasado ? `<br><small class="text-danger">SLA: ${op.slaHoras}h</small>` : ''}
+                        </td>
                     </tr>
                 `;
             });
