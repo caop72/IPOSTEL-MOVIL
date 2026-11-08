@@ -11,6 +11,19 @@
         body { background-color: #f4f6f9; }
         .navbar { background-color: #0d1b5e; }
         .navbar-brand, .nav-link { color: white !important; }
+        
+        /* CORRECCIÓN DE COLORES EN LAS PESTAÑAS */
+        .nav-tabs .nav-link { 
+            color: #0d1b5e !important; 
+            font-weight: bold; 
+            border: 1px solid #dee2e6;
+            margin-bottom: -1px;
+        }
+        .nav-tabs .nav-link.active { 
+            background-color: #0d1b5e !important; 
+            color: white !important; 
+            border-color: #0d1b5e;
+        }
     </style>
 </head>
 <body>
@@ -25,6 +38,18 @@
     </nav>
 
     <div class="container-fluid px-4">
+        
+        <!-- BUSCADOR GLOBAL DE PAQUETES -->
+        <div class="card mb-3 shadow-sm border-primary">
+            <div class="card-body py-2">
+                <div class="input-group">
+                    <span class="input-group-text bg-primary text-white"><i class="bi bi-search"></i></span>
+                    <input type="text" id="inputBusqueda" class="form-control form-control-lg" placeholder="Ingrese código de seguimiento (Ej: A1B2C o A1B2C-123)">
+                    <button class="btn btn-primary" onclick="buscarPaqueteGlobal()">Buscar Ruta</button>
+                </div>
+            </div>
+        </div>
+
         <!-- SELECTOR DE ESTADO Y OPT -->
         <div class="card mb-3 shadow-sm">
             <div class="card-body">
@@ -51,23 +76,23 @@
         <!-- PESTAÑAS -->
         <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-bold" id="recibidos-tab" data-bs-toggle="tab" data-bs-target="#recibidos" type="button" role="tab" onclick="cargarPendientes()">
-                    📥 Paquetes Recibidos
+                <button class="nav-link active" id="recibidos-tab" data-bs-toggle="tab" data-bs-target="#recibidos" type="button" role="tab" onclick="cargarPendientes()">
+                    📦 Control de Entrega al Destinatario
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold" id="enviados-tab" data-bs-toggle="tab" data-bs-target="#enviados" type="button" role="tab" onclick="cargarEnviados()">
-                    📤 Paquetes Despachados
+                <button class="nav-link" id="enviados-tab" data-bs-toggle="tab" data-bs-target="#enviados" type="button" role="tab" onclick="cargarEnviados()">
+                    🚚 Control de Envíos
                 </button>
             </li>
         </ul>
 
         <div class="tab-content" id="myTabContent">
-            <!-- PESTAÑA 1: RECIBIDOS -->
+            <!-- PESTAÑA 1: CONTROL DE ENTREGA -->
             <div class="tab-pane fade show active" id="recibidos" role="tabpanel">
                 <div class="card shadow-sm">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                        <h5 class="mb-0 fw-bold text-dark">Paquetes Pendientes de Entrega</h5>
+                        <h5 class="mb-0 fw-bold text-dark">Paquetes en Custodia (Para entregar al ciudadano)</h5>
                         <button class="btn btn-outline-primary btn-sm" onclick="cargarPendientes()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
                     </div>
                     <div class="card-body p-0">
@@ -75,7 +100,7 @@
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>ID Master</th>
+                                        <th>Código Seguimiento</th>
                                         <th>Piezas</th>
                                         <th>Fecha Recepción</th>
                                         <th>Acciones</th>
@@ -90,11 +115,11 @@
                 </div>
             </div>
 
-            <!-- PESTAÑA 2: DESPACHADOS -->
+            <!-- PESTAÑA 2: CONTROL DE ENVÍOS -->
             <div class="tab-pane fade" id="enviados" role="tabpanel">
                 <div class="card shadow-sm">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                        <h5 class="mb-0 fw-bold text-dark">Paquetes Despachados</h5>
+                        <h5 class="mb-0 fw-bold text-dark">Envíos Despachados desde esta OPT</h5>
                         <div>
                             <button class="btn btn-success btn-sm me-2" onclick="abrirCargaEnvio()">
                                 <i class="bi bi-plus-circle"></i> Cargar Nuevo Envío
@@ -107,7 +132,7 @@
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>ID Master</th>
+                                        <th>Código Seguimiento</th>
                                         <th>Destino</th>
                                         <th>Piezas</th>
                                         <th>Peso (Kg)</th>
@@ -130,7 +155,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title fw-bold">Cargar Nuevo Envío desde mi OPT</h5>
+                    <h5 class="modal-title fw-bold">Generar Nuevo Envío</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -179,14 +204,13 @@
                             <label class="form-label">N° Guía MRW (Opcional)</label>
                             <input type="text" class="form-control" id="guiaEnvio" placeholder="Opcional">
                         </div>
-                        <button type="submit" class="btn btn-success w-100" id="btnGuardarEnvio">Guardar Envío</button>
+                        <button type="submit" class="btn btn-success w-100" id="btnGuardarEnvio">Generar Envío</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS (para el modal) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -196,7 +220,6 @@
         document.addEventListener('DOMContentLoaded', async function () {
             modalEnvio = new bootstrap.Modal(document.getElementById('modalCargaEnvio'));
             
-            // Cargar estados
             const resp = await fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerEstadosOPT' }) });
             const data = await resp.json();
             
@@ -207,17 +230,16 @@
                 });
             }
 
-            // Evento para guardar el envío
             document.getElementById('formCargaEnvio').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const btn = document.getElementById('btnGuardarEnvio');
                 btn.disabled = true;
-                btn.innerHTML = 'Guardando...';
+                btn.innerHTML = 'Generando...';
 
                 const optActual = document.getElementById('selectNombreOPT').value;
 
                 const datos = {
-                    accion: 'crearMaster',
+                    accion: 'crearEnvioOPT',
                     origen: optActual, 
                     destino: document.getElementById('destinoEnvio').value,
                     piezas: document.getElementById('piezasEnvio').value,
@@ -233,7 +255,12 @@
                     const data = await response.json();
 
                     if (data.exito) {
-                        Swal.fire('¡Guardado!', 'El envío ha sido registrado.', 'success');
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Envío Generado!',
+                            html: `El código de seguimiento es:<br><h1 class="text-primary fw-bold my-3">${data.codigo}</h1>Guárdelo para consultar la ruta.`,
+                            confirmButtonText: 'Entendido'
+                        });
                         modalEnvio.hide();
                         document.getElementById('formCargaEnvio').reset();
                         cargarEnviados();
@@ -244,9 +271,39 @@
                     Swal.fire('Error de conexión', 'No se pudo conectar.', 'error');
                 }
                 btn.disabled = false;
-                btn.innerHTML = 'Guardar Envío';
+                btn.innerHTML = 'Generar Envío';
             });
         });
+
+        async function buscarPaqueteGlobal() {
+            const codigo = document.getElementById('inputBusqueda').value.trim();
+            if (!codigo) return Swal.fire('Atención', 'Ingrese un código de seguimiento.', 'warning');
+
+            Swal.fire({ title: 'Buscando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            const resp = await fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'buscarPaquete', codigo: codigo }) });
+            const data = await resp.json();
+
+            if (data.exito) {
+                const p = data.paquete;
+                Swal.fire({
+                    title: 'Resultado de Búsqueda',
+                    html: `
+                        <div class="text-start">
+                            <p><b>Código:</b> ${p.id}</p>
+                            <p><b>Origen:</b> ${p.origen}</p>
+                            <p><b>Destino:</b> ${p.destino}</p>
+                            <p><b>Estatus:</b> <span class="badge bg-primary">${p.estatus}</span></p>
+                            <p><b>Guía MRW:</b> ${p.guiaMrw || 'No asignada'}</p>
+                            <p><b>Fecha:</b> ${p.fecha}</p>
+                        </div>
+                    `,
+                    icon: 'info'
+                });
+            } else {
+                Swal.fire('No encontrado', data.mensaje, 'error');
+            }
+        }
 
         async function cargarOPTsDelEstado() {
             const estado = document.getElementById('selectEstadoOPT').value;
@@ -301,18 +358,18 @@
                 if (data.exito) {
                     tbody.innerHTML = '';
                     if (data.pendientes.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No hay paquetes pendientes para esta OPT.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No hay paquetes en custodia para esta OPT.</td></tr>';
                         return;
                     }
                     data.pendientes.forEach(p => {
                         tbody.innerHTML += `
                             <tr>
-                                <td class="fw-bold">${p.idMaster}</td>
+                                <td class="fw-bold text-primary">${p.idMaster}</td>
                                 <td>${p.piezas}</td>
                                 <td>${p.fechaRecepcion}</td>
                                 <td>
                                     <button class="btn btn-sm btn-success" onclick="confirmarEntrega('${p.idMaster}', '${p.opt}')">
-                                        <i class="bi bi-check-circle"></i> Confirmar Entrega
+                                        <i class="bi bi-check-circle"></i> Entregar al Ciudadano
                                     </button>
                                 </td>
                             </tr>
@@ -357,7 +414,7 @@
                         
                         tbody.innerHTML += `
                             <tr>
-                                <td class="fw-bold">${m.id}</td>
+                                <td class="fw-bold text-primary">${m.id}</td>
                                 <td>${m.destino}</td>
                                 <td>${m.piezas}</td>
                                 <td>${m.peso}</td>
