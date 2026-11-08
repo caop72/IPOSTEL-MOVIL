@@ -15,6 +15,8 @@
         .chart-container { position: relative; height: 40vh; width: 100%; }
         .nav-tabs .nav-link { color: #0d1b5e !important; font-weight: bold; border: 1px solid #dee2e6; }
         .nav-tabs .nav-link.active { background-color: #0d1b5e !important; color: white !important; }
+        .table th { background-color: #f8f9fa; font-size: 0.85rem; text-transform: uppercase; color: #6c757d; }
+        .badge-vector { background-color: #e9ecef; color: #0d1b5e; font-weight: bold; padding: 5px 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -55,10 +57,10 @@
   <!-- PESTAÑAS -->
   <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" onclick="cargarGeneral()">📊 Resumen General</button>
+      <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" onclick="cargarGeneral()">📊 Resumen Gráfico</button>
     </li>
     <li class="nav-item" role="presentation">
-      <button class="nav-link" id="estados-tab" data-bs-toggle="tab" data-bs-target="#estados" type="button" role="tab" onclick="cargarEstados()">📍 Por Estados</button>
+      <button class="nav-link" id="tablero-tab" data-bs-toggle="tab" data-bs-target="#tablero" type="button" role="tab" onclick="cargarTablero()">🛫 Tablero de Operaciones</button>
     </li>
   </ul>
 
@@ -79,28 +81,26 @@
       </div>
     </div>
 
-    <!-- PESTAÑA 2: POR ESTADOS -->
-    <div class="tab-pane fade" id="estados" role="tabpanel">
-      <div class="row g-3 mb-3">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header py-2">📊 Comparativa de Volumen por Estado (Piezas)</div>
-                <div class="card-body">
-                    <div class="chart-container"><canvas id="graficoEstados"></canvas></div>
-                </div>
-            </div>
+    <!-- PESTAÑA 2: TABLERO DE OPERACIONES -->
+    <div class="tab-pane fade" id="tablero" role="tabpanel">
+      <div class="card mb-3 shadow-sm border-primary">
+        <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
+            <span>🛫 Tablero de Control (Vectores y Tiempos)</span>
+            <span class="badge bg-light text-dark" id="countTablero">0 Registros</span>
         </div>
-      </div>
-      
-      <div class="card mb-3">
-        <div class="card-header py-2">📋 Detalle por Estado</div>
         <div class="card-body p-0">
-          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-            <table class="table table-sm table-hover mb-0 text-center">
-              <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
-                  <tr><th>Estado</th><th>Masters</th><th>Piezas</th><th>Peso (Kg)</th><th>Retrasos</th></tr>
+          <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+            <table class="table table-hover mb-0 align-middle">
+              <thead style="position: sticky; top: 0; z-index: 1;">
+                  <tr>
+                      <th>Código</th>
+                      <th>Vector (Ruta)</th>
+                      <th>Salida</th>
+                      <th>Tramo Actual</th>
+                      <th>Alerta</th>
+                  </tr>
               </thead>
-              <tbody id="tablaEstados"></tbody>
+              <tbody id="tablaTablero"></tbody>
             </table>
           </div>
         </div>
@@ -129,7 +129,7 @@
 <script>
   const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
   
-  let chartEstatus, chartDestinos, chartEstados;
+  let chartEstatus, chartDestinos;
 
   document.addEventListener('DOMContentLoaded', function () {
     const usuarioLogueado = (sessionStorage.getItem('usuario') || '').trim();
@@ -139,7 +139,7 @@
     }
     document.getElementById('nombreUsuario').innerText = usuarioLogueado;
 
-    // FECHA DE HOY POR DEFECTO
+    // PONER FECHA DE HOY POR DEFECTO
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById('filtroDesde').value = hoy;
     document.getElementById('filtroHasta').value = hoy;
@@ -163,10 +163,11 @@
     if (document.getElementById('general-tab').classList.contains('active')) {
         cargarGeneral();
     } else {
-        cargarEstados();
+        cargarTablero();
     }
   }
 
+  // --- PESTAÑA 1: GRAFICOS ---
   function cargarGeneral() {
     const filtros = obtenerFiltros();
     fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerEstadisticas', ...filtros }) })
@@ -179,53 +180,68 @@
     document.getElementById('totalPeso').innerText = stats.peso.toFixed(1);
     document.getElementById('totalRetrasos').innerText = stats.retraso + stats.critico;
 
-    // Gráfico 1: Estatus
     if (chartEstatus) chartEstatus.destroy();
     chartEstatus = new Chart(document.getElementById('graficoEstatus').getContext('2d'), {
       type: 'pie', data: { labels: ['A Tiempo', 'Retraso', 'Crítico', 'Extraviado'], datasets: [{ data: [stats.ok, stats.retraso, stats.critico, stats.extraviado], backgroundColor: ['#198754', '#ffc107', '#dc3545', '#6c757d'] }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 
-    // Gráfico 2: Top Destinos
     if (chartDestinos) chartDestinos.destroy();
     if (stats.destinos && Object.keys(stats.destinos).length > 0) {
         const destinosArray = Object.entries(stats.destinos).sort((a, b) => b[1] - a[1]).slice(0, 5);
-        const labelsDestinos = destinosArray.map(d => d[0]);
-        const dataDestinos = destinosArray.map(d => d[1]);
-
         chartDestinos = new Chart(document.getElementById('graficoDestinos').getContext('2d'), {
-            type: 'doughnut', data: { labels: labelsDestinos, datasets: [{ data: dataDestinos, backgroundColor: ['#0d1b5e', '#00d2ff', '#198754', '#ffc107', '#dc3545'] }] },
+            type: 'doughnut', data: { labels: destinosArray.map(d=>d[0]), datasets: [{ data: destinosArray.map(d=>d[1]), backgroundColor: ['#0d1b5e', '#00d2ff', '#198754', '#ffc107', '#dc3545'] }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
         });
     }
   }
 
-  function cargarEstados() {
+  // --- PESTAÑA 2: TABLERO DE OPERACIONES ---
+  function cargarTablero() {
     const filtros = obtenerFiltros();
-    fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerEstadisticasPorEstado', ...filtros }) })
-    .then(res => res.json()).then(resp => { if (resp.exito) renderizarEstados(resp.datos); });
+    const tbody = document.getElementById('tablaTablero');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Cargando operaciones...</td></tr>';
+
+    fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerTableroOperaciones', ...filtros }) })
+    .then(res => res.json())
+    .then(resp => {
+        if (resp.exito) {
+            tbody.innerHTML = '';
+            document.getElementById('countTablero').innerText = resp.datos.length + ' Registros';
+            
+            if (resp.datos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay operaciones en este rango de fechas.</td></tr>';
+                return;
+            }
+
+            resp.datos.forEach(op => {
+                let badgeAlerta = 'bg-success';
+                let textoAlerta = 'A Tiempo';
+                if (op.alerta === 'RETRASO') { badgeAlerta = 'bg-warning text-dark'; textoAlerta = 'Retraso'; }
+                else if (op.alerta === 'CRITICO') { badgeAlerta = 'bg-danger'; textoAlerta = 'Crítico'; }
+                else if (op.alerta === 'EXTRAVIADO') { badgeAlerta = 'bg-dark'; textoAlerta = 'Extraviado'; }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold text-primary">${op.id}</td>
+                        <td><span class="badge-vector">${op.vector}</span></td>
+                        <td>
+                            <div class="small text-muted">${op.fechaSalida}</div>
+                            <div class="small fw-bold">Hace ${op.dias} día(s)</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary mb-1">${op.estatus}</span>
+                            ${op.guiaMrw ? `<br><small class="text-muted">MRW: ${op.guiaMrw}</small>` : ''}
+                        </td>
+                        <td><span class="badge ${badgeAlerta}">${textoAlerta}</span></td>
+                    </tr>
+                `;
+            });
+        }
+    });
   }
 
-  function renderizarEstados(datos) {
-    const estados = Object.keys(datos);
-    const piezas = estados.map(e => datos[e].piezas);
-    
-    if (chartEstados) chartEstados.destroy();
-    chartEstados = new Chart(document.getElementById('graficoEstados').getContext('2d'), {
-      type: 'bar', data: { labels: estados, datasets: [{ label: 'Piezas', data: piezas, backgroundColor: '#00d2ff' }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-    });
-
-    const tbody = document.getElementById('tablaEstados');
-    let html = '';
-    estados.sort().forEach(estado => {
-      let d = datos[estado];
-      html += `<tr><td class="fw-bold">${estado}</td><td>${d.total}</td><td>${d.piezas}</td><td>${d.peso.toFixed(1)}</td><td class="${d.retrasos > 0 ? 'text-danger fw-bold' : 'text-success'}">${d.retrasos}</td></tr>`;
-    });
-    if(estados.length === 0) html = '<tr><td colspan="5">No hay datos en este rango de fechas.</td></tr>';
-    tbody.innerHTML = html;
-  }
-
+  // --- FUNCIONES DE CONFIGURACION Y REPORTES ---
   function abrirConfiguracion() {
     Swal.fire({ title: 'Cargando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerConfiguracion' }) })
