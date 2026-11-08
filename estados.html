@@ -116,26 +116,32 @@
             window.location.href = 'index.html';
         }
 
-        // Cargar los Masters que van hacia el estado del usuario
+                // Cargar los Masters según el Estado seleccionado
         async function cargarEnvios() {
+            const estadoSeleccionado = document.getElementById('selectorEstado').value;
             const tbody = document.getElementById('tablaEnvios');
+            
+            if (!estadoSeleccionado) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Por favor, seleccione un estado arriba.</td></tr>';
+                return;
+            }
+
             tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Cargando datos...</td></tr>';
 
             try {
                 const response = await fetch(URL_APPS_SCRIPT, {
                     method: 'POST',
-                    body: new URLSearchParams({ accion: 'obtenerEnviosPorEstado', estado: usuarioLogueado })
+                    body: new URLSearchParams({ accion: 'obtenerEnviosPorEstado', estado: estadoSeleccionado })
                 });
                 const data = await response.json();
 
                 if (data.exito) {
                     tbody.innerHTML = '';
                     if (data.envios.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No hay Masters registrados para su estado.</td></tr>';
+                        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No hay Masters registrados hacia ${estadoSeleccionado}.</td></tr>`;
                         return;
                     }
                     data.envios.forEach(m => {
-                        // Aplicar semáforo de color según estatus
                         let claseFila = '';
                         let badgeEstatus = 'bg-secondary';
                         if (m.estatus === 'Creado' || m.estatus === 'En_Transito') { claseFila = 'table-warning'; badgeEstatus = 'bg-warning text-dark'; }
