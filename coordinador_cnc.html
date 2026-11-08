@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPOSTEL - Coordinador CNC</title>
+    <title>IPOSTEL - Panel CNC</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -17,17 +17,45 @@
 
     <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-calculator me-2"></i>IPOSTEL - Coordinador CNC</a>
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-shield-check me-2"></i>IPOSTEL - Panel CNC (José)</a>
             <div class="d-flex">
+                <!-- BOTÓN DE AUDITORÍA MICRO ENTREGAS -->
+                <a href="microentregas.html" class="btn btn-outline-info btn-sm me-2 fw-bold">
+                    <i class="bi bi-search"></i> Auditar Entregas OPT
+                </a>
                 <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
             </div>
         </div>
     </nav>
 
     <div class="container-fluid px-4">
+        <!-- Tarjetas de Resumen -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card border-start border-4 border-success shadow-sm p-3">
+                    <h6 class="text-muted mb-1">Total Masters</h6>
+                    <h3 class="mb-0 fw-bold" id="totalMasters">0</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-start border-4 border-warning shadow-sm p-3">
+                    <h6 class="text-muted mb-1">Pendientes de Cierre</h6>
+                    <h3 class="mb-0 fw-bold" id="pendientesCierre">0</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-start border-4 border-primary shadow-sm p-3">
+                    <h6 class="text-muted mb-1">Cerrados OK</h6>
+                    <h3 class="mb-0 fw-bold" id="cerradosOK">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Masters -->
         <div class="card shadow-sm">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-check2-square me-2"></i>Validación y Cierre de Ruta</h5>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-list-ul me-2"></i>Supervisión de Masters</h5>
+                <button class="btn btn-primary btn-sm" onclick="cargarMasters()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -37,11 +65,11 @@
                                 <th>ID Master</th>
                                 <th>Origen -> Destino</th>
                                 <th>Piezas</th>
-                                <th>Estatus Actual</th>
-                                <th>Acción</th>
+                                <th>Estatus</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="tablaCNC">
+                        <tbody id="tablaMasters">
                             <tr><td colspan="5" class="text-center py-4">Cargando datos...</td></tr>
                         </tbody>
                     </table>
@@ -51,14 +79,16 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
+        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
 
         document.addEventListener('DOMContentLoaded', cargarMasters);
 
         async function cargarMasters() {
-            const tbody = document.getElementById('tablaCNC');
+            const tbody = document.getElementById('tablaMasters');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Cargando datos...</td></tr>';
+
             try {
-                const response = await fetch(SCRIPT_URL, {
+                const response = await fetch(URL_APPS_SCRIPT, {
                     method: 'POST',
                     body: new URLSearchParams({ accion: 'obtenerMasters' })
                 });
@@ -66,63 +96,75 @@
 
                 if (data.exito) {
                     tbody.innerHTML = '';
-                    // Filtrar solo los que ya tienen hitos y no están cerrados
-                    const pendientes = data.masters.filter(m => m.estatus !== 'Creado' && m.estatus !== 'Cerrado');
+                    let total = 0, pendientes = 0, cerrados = 0;
 
-                    if (pendientes.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay Masters pendientes por validar y cerrar.</td></tr>';
+                    if (data.masters.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay Masters registrados.</td></tr>';
                     }
 
-                    pendientes.forEach(m => {
+                    data.masters.forEach(m => {
+                        total++;
+                        if (m.estatus === 'Cerrado') cerrados++;
+                        else pendientes++;
+
                         tbody.innerHTML += `
                             <tr>
                                 <td class="fw-bold">${m.id}</td>
                                 <td>${m.origen} <i class="bi bi-arrow-right"></i> ${m.destino}</td>
                                 <td>${m.piezas}</td>
-                                <td><span class="badge bg-warning text-dark">${m.estatus}</span></td>
+                                <td><span class="badge bg-secondary">${m.estatus}</span></td>
                                 <td>
-                                    <button class="btn btn-sm btn-success" onclick="cerrarRuta('${m.id}')">
-                                        <i class="bi bi-check-circle"></i> Validar y Cerrar
+                                    <button class="btn btn-sm btn-outline-info me-1" onclick="verClasificacion('${m.id}')">
+                                        <i class="bi bi-diagram-3"></i> Ver Clasificación
                                     </button>
+                                    ${m.estatus !== 'Cerrado' ? `
+                                    <button class="btn btn-sm btn-outline-success" onclick="cerrarMaster('${m.id}')">
+                                        <i class="bi bi-check-circle"></i> Cerrar
+                                    </button>` : ''}
                                 </td>
                             </tr>
                         `;
                     });
+
+                    document.getElementById('totalMasters').textContent = total;
+                    document.getElementById('pendientesCierre').textContent = pendientes;
+                    document.getElementById('cerradosOK').textContent = cerrados;
                 }
             } catch (error) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
             }
         }
 
-        async function cerrarRuta(idMaster) {
-            Swal.fire({
-                title: '¿Cerrar ruta?',
-                text: "Se validará el seguimiento y se cerrará el Master. (Los montos de cobro se agregarán aquí luego).",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#198754',
-                confirmButtonText: 'Sí, cerrar',
-                cancelButtonText: 'Cancelar'
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    try {
-                        const response = await fetch(SCRIPT_URL, {
-                            method: 'POST',
-                            body: new URLSearchParams({ accion: 'cerrarMasterCNC', idMaster: idMaster })
-                        });
-                        const data = await response.json();
+        async function verClasificacion(idMaster) {
+            Swal.fire({ title: 'Cargando clasificación...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const response = await fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerClasificacionMaster', idMaster: idMaster }) });
+                const data = await response.json();
 
-                        if (data.exito) {
-                            Swal.fire('¡Cerrado!', 'El Master ha sido cerrado exitosamente.', 'success');
-                            cargarMasters();
-                        } else {
-                            Swal.fire('Error', data.mensaje, 'error');
-                        }
-                    } catch (error) {
-                        Swal.fire('Error', 'No se pudo conectar.', 'error');
-                    }
+                if (data.exito && data.clasificacion.length > 0) {
+                    let html = `<h6 class="text-start mb-3">Master: <b>${idMaster}</b></h6><table class="table table-sm table-bordered text-start"><thead class="table-light"><tr><th>OPT</th><th>Piezas</th><th>Estatus</th></tr></thead><tbody>`;
+                    data.clasificacion.forEach(c => {
+                        let badge = c.estatus === 'Entregado_Final' ? 'bg-success' : 'bg-warning text-dark';
+                        html += `<tr><td>${c.opt}</td><td>${c.piezas}</td><td><span class="badge ${badge}">${c.estatus}</span></td></tr>`;
+                    });
+                    html += `</tbody></table>`;
+                    Swal.fire({ title: 'Clasificación por OPT', html: html, width: '600px' });
+                } else {
+                    Swal.fire('Sin datos', 'Este Master aún no ha sido clasificado por el Gerente de Estado.', 'info');
                 }
-            });
+            } catch (error) { Swal.fire('Error', 'No se pudo cargar la clasificación.', 'error'); }
+        }
+
+        async function cerrarMaster(idMaster) {
+            const confirm = await Swal.fire({ title: '¿Cerrar Master?', text: "Esta acción indica que el proceso ha finalizado por completo.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#198754', confirmButtonText: 'Sí, cerrar' });
+            if (confirm.isConfirmed) {
+                Swal.fire({ title: 'Cerrando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'cerrarMasterCNC', idMaster: idMaster }) })
+                .then(res => res.json()).then(resp => {
+                    if (resp.exito) { Swal.fire('¡Cerrado!', 'El Master ha sido cerrado exitosamente.', 'success'); cargarMasters(); } 
+                    else { Swal.fire('Error', resp.mensaje, 'error'); }
+                }).catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
+            }
         }
     </script>
 </body>
