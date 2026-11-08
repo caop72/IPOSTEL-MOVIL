@@ -28,8 +28,12 @@
 
     <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-truck me-2"></i>IPOSTEL - Seguimiento y Control</a>
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-truck me-2"></i>IPOSTEL - Seguimiento y Control (Alfredo)</a>
             <div class="d-flex">
+                <!-- BOTÓN PARA ENLAZAR MRW -->
+                <button class="btn btn-warning btn-sm me-2 fw-bold text-dark" onclick="abrirEnlaceMRW()">
+                    <i class="bi bi-link-45deg"></i> Enlazar Guías MRW
+                </button>
                 <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
             </div>
         </div>
@@ -78,13 +82,14 @@
                                 <th>ID Master</th>
                                 <th>Origen -> Destino</th>
                                 <th>Piezas</th>
+                                <th>Guía MRW</th>
                                 <th>Estatus</th>
                                 <th>Alerta</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tablaMasters">
-                            <tr><td colspan="6" class="text-center py-4">Cargando datos...</td></tr>
+                            <tr><td colspan="7" class="text-center py-4">Cargando datos...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -185,7 +190,7 @@
 
         async function cargarMasters() {
             const tbody = document.getElementById('tablaMasters');
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Cargando datos...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Cargando datos...</td></tr>';
 
             try {
                 const response = await fetch(SCRIPT_URL, {
@@ -199,7 +204,7 @@
                     let conteo = { OK: 0, RETRASO: 0, CRITICO: 0, EXTRAVIADO: 0 };
 
                     if (data.masters.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No hay Masters registrados en el sistema aún.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No hay Masters registrados en el sistema aún.</td></tr>';
                     }
 
                     data.masters.forEach(m => {
@@ -214,6 +219,7 @@
                                 <td class="fw-bold">${m.id}</td>
                                 <td>${m.origen} <i class="bi bi-arrow-right"></i> ${m.destino}</td>
                                 <td>${m.piezas}</td>
+                                <td>${m.guiaMrw || '<span class="text-muted small">Sin enlazar</span>'}</td>
                                 <td><span class="badge bg-secondary">${m.estatus}</span></td>
                                 <td><span class="badge ${badgeClass}">${m.alerta}</span></td>
                                 <td>
@@ -230,14 +236,51 @@
                     document.getElementById('countRetraso').textContent = conteo.RETRASO;
                     document.getElementById('countCritico').textContent = conteo.CRITICO;
                     document.getElementById('countExtraviado').textContent = conteo.EXTRAVIADO;
-
                 }
             } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
             }
         }
 
-        // FUNCIÓN CORREGIDA: Ahora trae los datos reales del backend
+        // FUNCIÓN PARA ENLAZAR GUÍAS MRW
+        function abrirEnlaceMRW() {
+            Swal.fire({
+                title: 'Enlazar Guías MRW',
+                html: `
+                    <p class="small text-muted text-start mb-2">Pega el texto con formato: <b>ID_Master [TAB] N_Guia_MRW</b> (uno por línea).</p>
+                    <textarea id="textoMRW" class="form-control" rows="8" placeholder="Ejemplo:&#10;MST-20261106202203	123456789&#10;MST-20261106202300	987654321"></textarea>
+                `,
+                width: '600px',
+                showCancelButton: true,
+                confirmButtonText: 'Enlazar Guías',
+                confirmButtonColor: '#0d1b5e',
+                preConfirm: () => {
+                    const texto = document.getElementById('textoMRW').value;
+                    if (!texto) return Swal.showValidationMessage('Por favor, pega el texto primero.');
+                    return texto;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Enlazando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: new URLSearchParams({ accion: 'enlazarGuiasMRW', texto: result.value })
+                    })
+                    .then(res => res.json())
+                    .then(resp => {
+                        if (resp.exito) {
+                            Swal.fire('¡Éxito!', resp.mensaje, 'success');
+                            cargarMasters();
+                        } else {
+                            Swal.fire('Error', resp.mensaje, 'error');
+                        }
+                    })
+                    .catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
+                }
+            });
+        }
+
+        // FUNCIÓN TIMELINE
         async function abrirTimeline(idMaster) {
             document.getElementById('modalIdMaster').textContent = idMaster;
             document.getElementById('hitoIdMaster').value = idMaster;
@@ -246,7 +289,6 @@
             lista.innerHTML = '<li class="text-muted">Cargando historial...</li>';
 
             try {
-                // Llamada real al backend para obtener el historial
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: new URLSearchParams({ accion: 'obtenerTimeline', idMaster: idMaster })
@@ -256,7 +298,6 @@
                 if (data.exito) {
                     lista.innerHTML = '';
                     
-                    // Hito inicial siempre presente
                     lista.innerHTML += `
                         <li>
                             <strong>Master Creado</strong><br>
@@ -264,7 +305,6 @@
                         </li>
                     `;
 
-                    // Hitos guardados en la base de datos
                     if (data.historial.length === 0) {
                         lista.innerHTML += '<li class="text-muted">No hay más hitos registrados aún.</li>';
                     } else {
