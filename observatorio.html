@@ -13,8 +13,8 @@
         .card { border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: none; margin-bottom: 15px; }
         .card-header { background-color: #fff; border-bottom: 1px solid #eee; font-weight: bold; color: #0d1b5e; border-radius: 15px 15px 0 0 !important; }
         .chart-container { position: relative; height: 40vh; width: 100%; }
-        .nav-tabs .nav-link { color: #6c757d; font-weight: 600; }
-        .nav-tabs .nav-link.active { color: #0d1b5e; border-bottom: 3px solid #0d1b5e; }
+        .nav-tabs .nav-link { color: #0d1b5e !important; font-weight: bold; border: 1px solid #dee2e6; }
+        .nav-tabs .nav-link.active { background-color: #0d1b5e !important; color: white !important; }
     </style>
 </head>
 <body>
@@ -123,36 +123,34 @@
     </div>
   </div>
 
-</div> <!-- Cierre del container-fluid -->
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // URL DE TU GOOGLE APPS SCRIPT
   const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
   
   let chartEstatus, chartDestinos, chartEstados;
 
   document.addEventListener('DOMContentLoaded', function () {
-    // VALIDACIÓN DE SESIÓN
     const usuarioLogueado = (sessionStorage.getItem('usuario') || '').trim();
     if (!usuarioLogueado) { 
         setTimeout(() => { window.location.href = 'index.html'; }, 100); 
         return; 
     }
     document.getElementById('nombreUsuario').innerText = usuarioLogueado;
+
+    // FECHA DE HOY POR DEFECTO
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('filtroDesde').value = hoy;
+    document.getElementById('filtroHasta').value = hoy;
+
     cargarGeneral(); 
   });
 
-  function cerrarSesion() { 
-      sessionStorage.clear(); 
-      window.location.href = 'index.html'; 
-  }
+  function cerrarSesion() { sessionStorage.clear(); window.location.href = 'index.html'; }
 
   function obtenerFiltros() {
-    return { 
-        fechaInicio: document.getElementById('filtroDesde').value, 
-        fechaFin: document.getElementById('filtroHasta').value 
-    };
+    return { fechaInicio: document.getElementById('filtroDesde').value, fechaFin: document.getElementById('filtroHasta').value };
   }
 
   function limpiarFiltros() {
@@ -169,18 +167,10 @@
     }
   }
 
-  // --- PESTAÑA GENERAL ---
   function cargarGeneral() {
     const filtros = obtenerFiltros();
-    fetch(URL_APPS_SCRIPT, { 
-        method: 'POST', 
-        body: new URLSearchParams({ accion: 'obtenerEstadisticas', ...filtros }) 
-    })
-    .then(res => res.json())
-    .then(resp => { 
-        if (resp.exito) renderizarGeneral(resp.stats); 
-    })
-    .catch(err => console.error("Error cargando estadísticas:", err));
+    fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerEstadisticas', ...filtros }) })
+    .then(res => res.json()).then(resp => { if (resp.exito) renderizarGeneral(resp.stats); });
   }
 
   function renderizarGeneral(stats) {
@@ -189,29 +179,31 @@
     document.getElementById('totalPeso').innerText = stats.peso.toFixed(1);
     document.getElementById('totalRetrasos').innerText = stats.retraso + stats.critico;
 
+    // Gráfico 1: Estatus
     if (chartEstatus) chartEstatus.destroy();
     chartEstatus = new Chart(document.getElementById('graficoEstatus').getContext('2d'), {
-      type: 'pie', 
-      data: { 
-          labels: ['A Tiempo', 'Retraso', 'Crítico', 'Extraviado'], 
-          datasets: [{ data: [stats.ok, stats.retraso, stats.critico, stats.extraviado], backgroundColor: ['#198754', '#ffc107', '#dc3545', '#6c757d'] }] 
-      },
+      type: 'pie', data: { labels: ['A Tiempo', 'Retraso', 'Crítico', 'Extraviado'], datasets: [{ data: [stats.ok, stats.retraso, stats.critico, stats.extraviado], backgroundColor: ['#198754', '#ffc107', '#dc3545', '#6c757d'] }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
+
+    // Gráfico 2: Top Destinos
+    if (chartDestinos) chartDestinos.destroy();
+    if (stats.destinos && Object.keys(stats.destinos).length > 0) {
+        const destinosArray = Object.entries(stats.destinos).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        const labelsDestinos = destinosArray.map(d => d[0]);
+        const dataDestinos = destinosArray.map(d => d[1]);
+
+        chartDestinos = new Chart(document.getElementById('graficoDestinos').getContext('2d'), {
+            type: 'doughnut', data: { labels: labelsDestinos, datasets: [{ data: dataDestinos, backgroundColor: ['#0d1b5e', '#00d2ff', '#198754', '#ffc107', '#dc3545'] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
   }
 
-  // --- PESTAÑA ESTADOS ---
   function cargarEstados() {
     const filtros = obtenerFiltros();
-    fetch(URL_APPS_SCRIPT, { 
-        method: 'POST', 
-        body: new URLSearchParams({ accion: 'obtenerEstadisticasPorEstado', ...filtros }) 
-    })
-    .then(res => res.json())
-    .then(resp => { 
-        if (resp.exito) renderizarEstados(resp.datos); 
-    })
-    .catch(err => console.error("Error cargando estados:", err));
+    fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerEstadisticasPorEstado', ...filtros }) })
+    .then(res => res.json()).then(resp => { if (resp.exito) renderizarEstados(resp.datos); });
   }
 
   function renderizarEstados(datos) {
@@ -220,11 +212,7 @@
     
     if (chartEstados) chartEstados.destroy();
     chartEstados = new Chart(document.getElementById('graficoEstados').getContext('2d'), {
-      type: 'bar', 
-      data: { 
-          labels: estados, 
-          datasets: [{ label: 'Piezas', data: piezas, backgroundColor: '#00d2ff' }] 
-      },
+      type: 'bar', data: { labels: estados, datasets: [{ label: 'Piezas', data: piezas, backgroundColor: '#00d2ff' }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
     });
 
@@ -232,30 +220,16 @@
     let html = '';
     estados.sort().forEach(estado => {
       let d = datos[estado];
-      html += `<tr>
-        <td class="fw-bold">${estado}</td>
-        <td>${d.total}</td>
-        <td>${d.piezas}</td>
-        <td>${d.peso.toFixed(1)}</td>
-        <td class="${d.retrasos > 0 ? 'text-danger fw-bold' : 'text-success'}">${d.retrasos}</td>
-      </tr>`;
+      html += `<tr><td class="fw-bold">${estado}</td><td>${d.total}</td><td>${d.piezas}</td><td>${d.peso.toFixed(1)}</td><td class="${d.retrasos > 0 ? 'text-danger fw-bold' : 'text-success'}">${d.retrasos}</td></tr>`;
     });
     if(estados.length === 0) html = '<tr><td colspan="5">No hay datos en este rango de fechas.</td></tr>';
     tbody.innerHTML = html;
   }
 
-  // --- CONFIGURACIÓN ---
   function abrirConfiguracion() {
     Swal.fire({ title: 'Cargando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    fetch(URL_APPS_SCRIPT, { 
-        method: 'POST', 
-        body: new URLSearchParams({ accion: 'obtenerConfiguracion' }) 
-    })
-    .then(res => res.json())
-    .then(resp => { 
-        if (!resp.exito) return Swal.fire('Error', resp.mensaje, 'error'); 
-        mostrarModalConfiguracion(resp.config); 
-    })
+    fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerConfiguracion' }) })
+    .then(res => res.json()).then(resp => { if (!resp.exito) return Swal.fire('Error', resp.mensaje, 'error'); mostrarModalConfiguracion(resp.config); })
     .catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
   }
 
@@ -264,21 +238,12 @@
     config.forEach(item => {
       const esCorreo = item.clave.includes('CORREO');
       const icono = esCorreo ? '📧' : '📝';
-      htmlForm += `<div class="mb-3">
-                    <label class="form-label small fw-bold mb-1">${icono} ${item.clave}</label>
-                    <input type="text" class="form-control form-control-sm" id="cfg_${item.clave}" value="${item.valor}">
-                    <small class="text-muted" style="font-size: 0.75rem;">${item.descripcion}</small>
-                   </div>`;
+      htmlForm += `<div class="mb-3"><label class="form-label small fw-bold mb-1">${icono} ${item.clave}</label><input type="text" class="form-control form-control-sm" id="cfg_${item.clave}" value="${item.valor}"><small class="text-muted" style="font-size: 0.75rem;">${item.descripcion}</small></div>`;
     });
     htmlForm += '</div>';
 
     Swal.fire({
-      title: '⚙️ Configuración',
-      html: htmlForm,
-      width: '600px',
-      showCancelButton: true,
-      confirmButtonText: '💾 Guardar',
-      confirmButtonColor: '#0d1b5e',
+      title: '⚙️ Configuración', html: htmlForm, width: '600px', showCancelButton: true, confirmButtonText: '💾 Guardar', confirmButtonColor: '#0d1b5e',
       preConfirm: () => {
         const cambios = [];
         config.forEach(item => {
@@ -287,21 +252,12 @@
         });
         return cambios;
       }
-    }).then((result) => { 
-        if (result.isConfirmed) { 
-            if (result.value.length === 0) return Swal.fire('Sin cambios', 'No modificaste nada.', 'info'); 
-            guardarConfiguracion(result.value); 
-        } 
-    });
+    }).then((result) => { if (result.isConfirmed) { if (result.value.length === 0) return Swal.fire('Sin cambios', 'No modificaste nada.', 'info'); guardarConfiguracion(result.value); } });
   }
 
   function guardarConfiguracion(cambios) {
     Swal.fire({ title: 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    let promesas = cambios.map(cambio => fetch(URL_APPS_SCRIPT, { 
-        method: 'POST', 
-        body: new URLSearchParams({ accion: 'actualizarConfiguracion', clave: cambio.clave, valor: cambio.valor }) 
-    }).then(res => res.json()));
-    
+    let promesas = cambios.map(cambio => fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'actualizarConfiguracion', clave: cambio.clave, valor: cambio.valor }) }).then(res => res.json()));
     Promise.all(promesas).then(resultados => {
       const errores = resultados.filter(r => !r.exito);
       if (errores.length > 0) Swal.fire('Error', errores.map(e => e.mensaje).join('<br>'), 'error');
@@ -309,24 +265,10 @@
     }).catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
   }
 
-  // --- GENERAR REPORTE ---
   function generarReporte() {
-    Swal.fire({ 
-        title: 'Generando Reporte...', 
-        text: 'Por favor espere, esto puede tardar unos segundos.',
-        allowOutsideClick: false, 
-        didOpen: () => Swal.showLoading() 
-    });
-    
-    fetch(URL_APPS_SCRIPT, { 
-        method: 'POST', 
-        body: new URLSearchParams({ accion: 'generarReporte' }) 
-    })
-    .then(res => res.json())
-    .then(resp => { 
-        if (resp.exito) Swal.fire('¡Éxito!', resp.mensaje, 'success'); 
-        else Swal.fire('Atención', resp.mensaje, 'warning'); 
-    })
+    Swal.fire({ title: 'Generando Reporte...', text: 'Por favor espere, esto puede tardar unos segundos.', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'generarReporte' }) })
+    .then(res => res.json()).then(resp => { if (resp.exito) Swal.fire('¡Éxito!', resp.mensaje, 'success'); else Swal.fire('Atención', resp.mensaje, 'warning'); })
     .catch(() => Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error'));
   }
 </script>
