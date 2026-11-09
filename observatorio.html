@@ -96,8 +96,6 @@
 
     <!-- PESTAÑA 2: TABLERO DE OPERACIONES -->
     <div class="tab-pane fade" id="tablero" role="tabpanel">
-      
-      <!-- NUEVOS INDICADORES DE ALERTA -->
       <div class="row mb-3 g-2">
           <div class="col-md-6">
               <div class="card border-start border-4 border-warning shadow-sm p-2">
@@ -147,16 +145,9 @@
       </div>
     </div>
 
-    <!-- PESTAÑA 3: CUADRO DE RELACIÓN -->
+    <!-- PESTAÑA 3: CUADRO DE RELACIÓN (SEPARADO) -->
     <div class="tab-pane fade" id="relacion" role="tabpanel">
-      <div class="card shadow-sm">
-        <div class="card-header bg-white py-2">
-            <span>📋 Cuadro de Relación de Envíos y Recepciones</span>
-        </div>
-        <div class="card-body">
-            <div id="contenedorRelacion"></div>
-        </div>
-      </div>
+      <div class="row" id="contenedorRelacion"></div>
     </div>
 
   </div>
@@ -295,7 +286,6 @@
                     iconoAlerta = 'bi-check-circle';
                 }
 
-                // Resaltar la fila completa si está retrasado
                 let claseFila = op.estaRetrasado ? 'table-danger' : '';
 
                 tbody.innerHTML += `
@@ -323,11 +313,11 @@
     });
   }
 
-  // --- PESTAÑA 3: CUADRO DE RELACIÓN ---
+  // --- PESTAÑA 3: CUADRO DE RELACIÓN (SEPARADO) ---
   function cargarRelacion() {
     const filtros = obtenerFiltros();
     const contenedor = document.getElementById('contenedorRelacion');
-    contenedor.innerHTML = '<div class="text-center py-4">Cargando cuadro de relación...</div>';
+    contenedor.innerHTML = '<div class="col-12 text-center py-4">Cargando cuadro de relación...</div>';
 
     fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerResumenRelacion', ...filtros }) })
     .then(res => res.json())
@@ -336,61 +326,67 @@
             const estados = Object.keys(resp.datos).sort();
             
             if (estados.length === 0) {
-                contenedor.innerHTML = '<div class="text-center py-4 text-muted">No hay movimientos en este rango de fechas.</div>';
+                contenedor.innerHTML = '<div class="col-12 text-center py-4 text-muted">No hay movimientos en este rango de fechas.</div>';
                 return;
             }
 
-            let html = '<table class="tabla-relacion"><thead><tr><th style="width: 15%;">DESDE (Estado)</th><th style="width: 45%;">MASTERS ENVIADOS</th><th style="width: 40%;">MASTERS RECIBIDOS</th></tr></thead><tbody>';
+            // TABLA 1: ENVIADOS (Origen)
+            let htmlEnv = `
+                <div class="col-md-6 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-primary text-white py-2 fw-bold">📤 MASTERS ENVIADOS (Por Origen)</div>
+                        <div class="card-body p-0">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="table-light"><tr><th>Estado Origen</th><th>Detalle de Envíos</th></tr></thead>
+                                <tbody>
+            `;
+            
+            // TABLA 2: RECIBIDOS (Destino)
+            let htmlRec = `
+                <div class="col-md-6 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-success text-white py-2 fw-bold">📥 MASTERS RECIBIDOS (Por Destino)</div>
+                        <div class="card-body p-0">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="table-light"><tr><th>Estado Destino</th><th>Detalle de Recepciones</th></tr></thead>
+                                <tbody>
+            `;
 
-            let totalEnviadosGlobal = 0;
-            let totalRecibidosGlobal = 0;
+            let totalEnv = 0;
+            let totalRec = 0;
 
             estados.forEach(estado => {
                 const data = resp.datos[estado];
                 const enviadosArray = Object.entries(data.enviados);
                 const recibidosArray = Object.entries(data.recibidos);
-                
-                const totalEnv = enviadosArray.reduce((acc, curr) => acc + curr[1], 0);
-                const totalRec = recibidosArray.reduce((acc, curr) => acc + curr[1], 0);
-                
-                totalEnviadosGlobal += totalEnv;
-                totalRecibidosGlobal += totalRec;
 
-                // Si no tiene envíos ni recepciones, saltar
-                if (totalEnv === 0 && totalRec === 0) return;
+                // Fila para Enviados
+                if (enviadosArray.length > 0) {
+                    const sumaEnv = enviadosArray.reduce((acc, curr) => acc + curr[1], 0);
+                    totalEnv += sumaEnv;
+                    htmlEnv += `<tr><td class="fw-bold align-middle">${estado}</td><td>`;
+                    enviadosArray.forEach(([dest, cant]) => {
+                        htmlEnv += `<span class="badge-vector mb-1 d-inline-block">${cant} ➔ ${dest}</span> `;
+                    });
+                    htmlEnv += `</td></tr>`;
+                }
 
-                const maxFilas = Math.max(enviadosArray.length, recibidosArray.length);
-                
-                for (let i = 0; i < maxFilas; i++) {
-                    html += '<tr>';
-                    
-                    // Columna del estado (solo en la primera fila del grupo)
-                    if (i === 0) {
-                        html += `<td rowspan="${maxFilas}" class="fw-bold text-center align-middle" style="background-color: #f1f3f5; font-size: 1.1rem;">${estado}</td>`;
-                    }
-
-                    // Columna de enviados
-                    if (enviadosArray[i]) {
-                        html += `<td><span class="fw-bold">${enviadosArray[i][1]}</span> <i class="bi bi-arrow-right"></i> ${enviadosArray[i][0]}</td>`;
-                    } else {
-                        html += '<td></td>';
-                    }
-
-                    // Columna de recibidos
-                    if (recibidosArray[i]) {
-                        html += `<td><span class="fw-bold">${recibidosArray[i][1]}</span> <i class="bi bi-arrow-left"></i> ${recibidosArray[i][0]}</td>`;
-                    } else {
-                        html += '<td></td>';
-                    }
-
-                    html += '</tr>';
+                // Fila para Recibidos
+                if (recibidosArray.length > 0) {
+                    const sumaRec = recibidosArray.reduce((acc, curr) => acc + curr[1], 0);
+                    totalRec += sumaRec;
+                    htmlRec += `<tr><td class="fw-bold align-middle">${estado}</td><td>`;
+                    recibidosArray.forEach(([orig, cant]) => {
+                        htmlRec += `<span class="badge-vector mb-1 d-inline-block">${cant} ← ${orig}</span> `;
+                    });
+                    htmlRec += `</td></tr>`;
                 }
             });
 
-            html += `<tr class="fila-total"><td class="text-center">TOTAL</td><td>${totalEnviadosGlobal} Masters Enviados</td><td>${totalRecibidosGlobal} Masters Recibidos</td></tr>`;
-            html += '</tbody></table>';
+            htmlEnv += `</tbody><tfoot><tr class="fila-total"><td>TOTAL</td><td>${totalEnv} Masters Enviados</td></tr></tfoot></table></div></div></div>`;
+            htmlRec += `</tbody><tfoot><tr class="fila-total"><td>TOTAL</td><td>${totalRec} Masters Recibidos</td></tr></tfoot></table></div></div></div>`;
 
-            contenedor.innerHTML = html;
+            contenedor.innerHTML = htmlEnv + htmlRec;
         }
     });
   }
