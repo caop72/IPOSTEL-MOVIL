@@ -350,31 +350,43 @@
             await cargarInformacionOPT();
         }
 
-        async function cargarInformacionOPT() {
+             async function cargarInformacionOPT() {
             try {
+                // Decodificamos el estado por si viene con caracteres especiales en la URL
+                const estadoDecodificado = decodeURIComponent(estadoActual);
+                
                 const response = await fetch(URL_APPS_SCRIPT, {
                     method: 'POST',
-                    body: new URLSearchParams({ accion: 'obtenerOPTsPorEstado', estado: estadoActual })
+                    body: new URLSearchParams({ accion: 'obtenerOPTsPorEstado', estado: estadoDecodificado })
                 });
 
                 const data = await response.json();
                 
+                // Si el backend no devuelve el arreglo, mostramos error
                 if (!data.exito || !data.opts) throw new Error('No se pudo obtener la información de la OPT');
 
+                // Buscamos la OPT por su código interno
                 const optEncontrada = data.opts.find(o => o.codigo === optActual);
                 
                 if (optEncontrada) {
                     document.getElementById('lblNombreOPT').textContent = optEncontrada.nombre;
                 } else {
+                    // Si no la encuentra, mostramos el código interno como respaldo
                     document.getElementById('lblNombreOPT').textContent = optActual;
                 }
 
+                // Cargamos las tablas
                 await cargarPendientes();
                 await cargarEnviados();
 
             } catch (error) {
                 console.error('Error cargando OPT:', error);
-                document.getElementById('lblNombreOPT').textContent = `Error al cargar nombre de OPT`;
+                // Si falla, igual mostramos el código interno en la tarjeta
+                document.getElementById('lblNombreOPT').textContent = optActual;
+                
+                // Y cargamos las tablas de todos modos para no dejar la pantalla vacía
+                await cargarPendientes();
+                await cargarEnviados();
             }
         }
 
