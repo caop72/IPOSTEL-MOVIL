@@ -18,7 +18,6 @@
   .form-control, .form-select { border-radius: 8px; border: 1px solid #ced4da; font-size: 0.95rem; }
   .form-control:focus, .form-select:focus { border-color: var(--cyan); box-shadow: 0 0 0 0.25rem rgba(0, 210, 255, 0.25); }
   .oculto { display: none !important; }
-  .box-clave { background: #f8f9fa; border-radius: 8px; padding: 15px; border: 1px solid #e9ecef; }
 </style>
 </head>
 <body>
@@ -45,10 +44,11 @@
     </div>
 
     <div id="panelCredenciales" class="oculto">
-      <div id="boxSoloClave" class="mb-3 box-clave oculto">
+      <div id="boxSoloClave" class="mb-3 oculto">
         <label class="form-label">Clave de Acceso (Inicial: 1234)</label>
         <input id="claveDirecta" type="password" class="form-control" placeholder="••••">
       </div>
+
       <div id="boxSubRol" class="mb-3 oculto">
         <label class="form-label">Seleccione Dirección</label>
         <select id="selSubRol" class="form-select" onchange="cambiarSubRol()">
@@ -57,6 +57,7 @@
           <option value="OPERACIONES">Dirección de Operaciones</option>
         </select>
       </div>
+
       <div id="boxCoord" class="mb-3 oculto">
         <label class="form-label">Seleccione Coordinación</label>
         <select id="selCoord" class="form-select" onchange="cambiarCoord()">
@@ -66,6 +67,8 @@
           <option value="CNC_MICRO">CNC-Micro Entrega (José)</option>
         </select>
       </div>
+
+      <!-- Caja para los datos de registro / login -->
       <div id="boxCredencialesNormales" class="mb-3 oculto">
         <div class="mb-3">
           <label class="form-label">Usuario</label>
@@ -80,44 +83,32 @@
           <input id="claveNormal" type="password" class="form-control" placeholder="••••">
         </div>
       </div>
+
       <div id="boxEstado" class="mb-3 oculto">
         <label class="form-label">Estado</label>
         <select id="selEstado" class="form-select" onchange="cambiarEstado()">
           <option value="">-- Seleccione Estado --</option>
         </select>
       </div>
+
       <div id="boxOpt" class="mb-3 oculto">
         <label class="form-label">OPT</label>
         <select id="selOpt" class="form-select" onchange="cambiarOpt()">
           <option value="">-- Seleccione OPT --</option>
         </select>
       </div>
-      <div id="boxCredencialesOPT" class="mb-3 box-clave oculto">
-        <p class="text-primary small fw-bold mb-2">Credenciales de la OPT</p>
+
+      <div id="boxCredencialesOPT" class="mb-3 oculto">
+        <p class="text-primary small fw-bold mb-2">Datos de la OPT</p>
         <div class="mb-2">
           <input id="correoOPT" type="email" class="form-control" placeholder="Correo del Jefe/Analista">
         </div>
         <div class="mb-0">
-          <input id="claveOPT" type="password" class="form-control" placeholder="Clave inicial (1234)">
+          <input id="claveOPT" type="password" class="form-control" placeholder="Clave">
         </div>
       </div>
-      <button id="btnIngresar" class="btn btn-ipostel w-100 mt-2" onclick="ingresar()">Ingresar al Sistema</button>
-    </div>
 
-    <div id="divCambioClave" class="oculto mt-3 p-3 bg-danger bg-opacity-10 rounded border border-danger">
-      <p class="text-danger small fw-bold mb-2">⚠️ Cambio de clave</p>
-      <p class="text-muted small mb-2" id="msgCambioClave">Debe establecer una nueva clave de 4 dígitos.</p>
-      <div id="boxCorreoRegistro" class="mb-2 oculto">
-        <label class="form-label small">Registre su Correo Oficial</label>
-        <input id="correoRegistro" type="email" class="form-control form-control-sm" placeholder="correo@ipostel.gob.ve">
-      </div>
-      <div class="mb-2">
-        <input id="nuevaClave" type="password" maxlength="4" inputmode="numeric" class="form-control form-control-sm" placeholder="Nueva clave (4 dígitos)">
-      </div>
-      <div class="mb-3">
-        <input id="confirmarClave" type="password" maxlength="4" inputmode="numeric" class="form-control form-control-sm" placeholder="Confirmar clave">
-      </div>
-      <button class="btn btn-danger btn-sm w-100" onclick="guardarClave()">Guardar y Entrar</button>
+      <button id="btnIngresar" class="btn btn-ipostel w-100 mt-2" onclick="ingresar()">Ingresar al Sistema</button>
     </div>
 
     <div class="text-center mt-3">
@@ -128,7 +119,6 @@
 
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
-let loginResultado = null;
 
 function cambiarRol() {
   const rol = document.getElementById('selRol').value;
@@ -140,8 +130,6 @@ function cambiarRol() {
   document.getElementById('boxEstado').classList.add('oculto');
   document.getElementById('boxOpt').classList.add('oculto');
   document.getElementById('boxCredencialesOPT').classList.add('oculto');
-  document.getElementById('divCambioClave').classList.add('oculto');
-  document.getElementById('btnIngresar').classList.remove('oculto');
 
   if (!rol) return;
   document.getElementById('panelCredenciales').classList.remove('oculto');
@@ -258,7 +246,7 @@ function ingresar() {
   }
 
   if (['COORDINADOR', 'GERENCIA_ESTADO'].includes(rol)) {
-    if (!payload.usuario || !payload.correo || !payload.clave) { Swal.fire('Atención', 'Complete usuario, correo y clave.', 'warning'); return; }
+    if (!payload.usuario || !payload.correo || !payload.clave) { Swal.fire('Atención', 'Complete todos los campos.', 'warning'); return; }
   }
   if (rol === 'GERENCIA_ESTADO' && !payload.estado) { Swal.fire('Atención', 'Seleccione un estado.', 'warning'); return; }
   if (rol.includes('OPT')) {
@@ -280,61 +268,9 @@ function procesarLogin(r) {
   document.getElementById('btnIngresar').disabled = false;
   document.getElementById('btnIngresar').innerText = 'Ingresar al Sistema';
   if (!r.exito) { Swal.fire('Acceso denegado', r.mensaje || 'No autorizado', 'error'); return; }
-  if (r.requiereCambio) {
-    loginResultado = r;
-    document.getElementById('btnIngresar').classList.add('oculto');
-    document.getElementById('divCambioClave').classList.remove('oculto');
-    const rol = document.getElementById('selRol').value;
-    if (rol === 'DIRECCION' || rol.includes('OPT')) {
-      document.getElementById('boxCorreoRegistro').classList.remove('oculto');
-      document.getElementById('msgCambioClave').innerText = 'Debe registrar su correo y establecer una nueva clave de 4 dígitos.';
-    } else {
-      document.getElementById('boxCorreoRegistro').classList.add('oculto');
-      document.getElementById('msgCambioClave').innerText = 'Por seguridad, establezca una nueva clave de 4 dígitos.';
-    }
-    Swal.fire('Cambio de clave', 'Debe actualizar sus credenciales para continuar.', 'info');
-    return;
-  }
   redirigir(r);
 }
 
-function guardarClave() {
-  const n1 = document.getElementById('nuevaClave').value.trim();
-  const n2 = document.getElementById('confirmarClave').value.trim();
-  if (!/^\d{4}$/.test(n1)) { Swal.fire('Inválida', 'La clave debe tener 4 dígitos numéricos.', 'warning'); return; }
-  if (n1 !== n2) { Swal.fire('Error', 'Las claves no coinciden.', 'warning'); return; }
-
-  const rol = document.getElementById('selRol').value;
-  const payload = { accion: 'cambiarClave', nuevaClave: n1 };
-  if (loginResultado.codigoOPT) payload.codigoOPT = loginResultado.codigoOPT;
-  if (loginResultado.usuario) payload.usuario = loginResultado.usuario;
-  
-  if (rol === 'DIRECCION') {
-    payload.correo = document.getElementById('correoRegistro').value.trim();
-    if (!payload.correo) { Swal.fire('Atención', 'Ingrese su correo oficial.', 'warning'); return; }
-  } else if (rol.includes('OPT')) {
-    payload.correo = document.getElementById('correoOPT').value.trim();
-  } else { payload.correo = ''; }
-
-  post(payload).then(resp => {
-    if (!resp.exito) { Swal.fire('Error', resp.mensaje, 'error'); return; }
-    const u = encodeURIComponent(loginResultado.usuario || '');
-    let pantalla = loginResultado.pantalla;
-    if (!pantalla) {
-      if (rol === 'PRESIDENCIA' || rol === 'DESPACHO' || rol === 'OBSERVATORIO') pantalla = 'observatorio.html';
-      else if (rol === 'DIRECCION') pantalla = (document.getElementById('selSubRol').value === 'CNC') ? 'microentregas.html' : 'observatorio.html';
-    }
-    sessionStorage.setItem('ipostel_rol', rol);
-    sessionStorage.setItem('ipostel_usuario', loginResultado.usuario || '');
-    sessionStorage.setItem('usuario', loginResultado.usuario || '');
-    
-    Swal.fire('✅ Clave actualizada', 'Ingresando al sistema...', 'success').then(() => {
-      window.location.href = pantalla + (pantalla.includes('?') ? '&' : '?') + 'u=' + u + '&rol=' + encodeURIComponent(rol);
-    });
-  });
-}
-
-// 🔥 FUNCIÓN BLINDADA CONTRA REDIRECCIONES CIRCULARES
 function redirigir(r) {
   const rol = (r.rol || document.getElementById('selRol').value || '').trim().toUpperCase();
   const usuario = r.usuario || '';
@@ -344,34 +280,22 @@ function redirigir(r) {
   sessionStorage.setItem('usuario', usuario);
 
   const rutasPorRol = {
-    PRESIDENCIA: 'observatorio.html',
-    DESPACHO: 'observatorio.html',
-    OBSERVATORIO: 'observatorio.html',
-    CNC: 'microentregas.html',
-    DIR_OPER: 'observatorio.html',
-    DIR_CNC: 'microentregas.html',
-    GERENTE_ESTADO: 'estados.html',
-    COORD_ENCAM: 'encaminamiento.html',
-    COORD_ALIANZA: 'seguimiento.html',
-    COORD_CNC: 'coordinador_cnc.html',
-    JEFE_OPT: 'portal_opt.html',
-    ANALISTA_OPT: 'portal_opt.html'
+    PRESIDENCIA: 'observatorio.html', DESPACHO: 'observatorio.html', OBSERVATORIO: 'observatorio.html',
+    CNC: 'microentregas.html', DIR_OPER: 'observatorio.html', DIR_CNC: 'microentregas.html',
+    GERENTE_ESTADO: 'estados.html', COORD_ENCAM: 'encaminamiento.html', COORD_ALIANZA: 'seguimiento.html',
+    COORD_CNC: 'coordinador_cnc.html', JEFE_OPT: 'portal_opt.html', ANALISTA_OPT: 'portal_opt.html'
   };
 
   let pantalla = r.pantalla;
-
-  if (!pantalla || pantalla === 'index.html' || pantalla === '/' || pantalla === 'https://caop72.github.io/IPOSTEL-MOVIL/') {
+  if (!pantalla || pantalla === 'index.html' || pantalla === '/' || pantalla.includes('github.io')) {
     pantalla = rutasPorRol[rol] || 'observatorio.html';
   }
 
   if (!pantalla.endsWith('.html')) {
-    Swal.fire('Error de configuración', 'El servidor no devolvió una pantalla válida.', 'error');
-    return;
+    Swal.fire('Error', 'El servidor no devolvió una pantalla válida.', 'error'); return;
   }
 
   const destino = pantalla + (pantalla.includes('?') ? '&' : '?') + 'u=' + encodeURIComponent(usuario) + '&rol=' + encodeURIComponent(rol);
-  
-  console.log('Redirigiendo a:', destino, '| Respuesta:', r);
   window.location.replace(destino);
 }
 
