@@ -311,11 +311,11 @@ function cambiarOpt() {
   const opt = document.getElementById('selOpt').value;
   
   if (opt) {
-    // Si selecciona una OPT, mostramos el formulario de registro
     document.getElementById('boxCredencialesOPT').classList.remove('oculto');
+    document.getElementById('btnIngresar').classList.remove('oculto'); // 🔥 El botón aparece aquí
   } else {
-    // Si no hay OPT seleccionada, lo ocultamos
     document.getElementById('boxCredencialesOPT').classList.add('oculto');
+    document.getElementById('btnIngresar').classList.add('oculto');
   }
 }
 
