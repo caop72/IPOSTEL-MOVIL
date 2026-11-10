@@ -170,13 +170,30 @@
   let chartEstatus, chartDestinos;
 
   document.addEventListener('DOMContentLoaded', function () {
-    const usuarioLogueado = (sessionStorage.getItem('usuario') || '').trim();
-    if (!usuarioLogueado) { 
+    // 1. Leer el usuario y rol desde la URL o desde sessionStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const rolUrl = (urlParams.get('rol') || '').toUpperCase();
+    const usuarioUrl = urlParams.get('u') || '';
+    
+    let rolActual = (rolUrl || sessionStorage.getItem('ipostel_rol') || sessionStorage.getItem('rol') || '').toUpperCase();
+    let usuarioLogueado = (usuarioUrl || sessionStorage.getItem('ipostel_usuario') || sessionStorage.getItem('usuario') || '').trim();
+
+    // 2. Guardar en memoria por si recarga
+    if (rolActual) sessionStorage.setItem('ipostel_rol', rolActual);
+    if (usuarioLogueado) sessionStorage.setItem('ipostel_usuario', usuarioLogueado);
+
+    // 3. Lista de roles permitidos (Los 3 directos + Director de Operaciones)
+    const rolesPermitidos = ['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO', 'DIR_OPER', 'DIR_OPERACIONES', 'DIRECTOR_OPERACIONES'];
+
+    if (!usuarioLogueado || !rolesPermitidos.includes(rolActual)) { 
         setTimeout(() => { window.location.href = 'index.html'; }, 100); 
         return; 
     }
+    
+    // 4. Mostrar nombre en la barra superior
     document.getElementById('nombreUsuario').innerText = usuarioLogueado;
 
+    // 5. Filtros por defecto (hoy)
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById('filtroDesde').value = hoy;
     document.getElementById('filtroHasta').value = hoy;
@@ -325,7 +342,6 @@
                 return;
             }
 
-            // ORDENAR: Gran Caracas, Altos Mirandinos, luego alfabéticamente
             estados.sort((a, b) => {
                 if (a === 'GRAN CARACAS') return -1;
                 if (b === 'GRAN CARACAS') return 1;
@@ -334,7 +350,6 @@
                 return a.localeCompare(b);
             });
 
-            // TABLA 1: ENVIADOS (Origen)
             let htmlEnv = `
                 <div class="col-md-6 mb-3">
                     <div class="card shadow-sm h-100">
@@ -345,7 +360,6 @@
                                 <tbody>
             `;
             
-            // TABLA 2: RECIBIDOS (Destino)
             let htmlRec = `
                 <div class="col-md-6 mb-3">
                     <div class="card shadow-sm h-100">
@@ -361,7 +375,6 @@
                 const enviadosArray = Object.entries(data.enviados);
                 const recibidosArray = Object.entries(data.recibidos);
 
-                // Fila para Enviados (si tiene, sino mostramos vacío para Gran Caracas y Altos)
                 if (enviadosArray.length > 0 || estado === 'GRAN CARACAS' || estado === 'ALTOS MIRANDINOS') {
                     htmlEnv += `<tr><td class="fw-bold align-middle">${estado}</td><td>`;
                     if (enviadosArray.length > 0) {
@@ -374,7 +387,6 @@
                     htmlEnv += `</td></tr>`;
                 }
 
-                // Fila para Recibidos (si tiene, sino mostramos vacío para Gran Caracas y Altos)
                 if (recibidosArray.length > 0 || estado === 'GRAN CARACAS' || estado === 'ALTOS MIRANDINOS') {
                     htmlRec += `<tr><td class="fw-bold align-middle">${estado}</td><td>`;
                     if (recibidosArray.length > 0) {
