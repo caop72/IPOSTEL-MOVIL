@@ -148,39 +148,38 @@ body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, sans-serif; }
         </div>
       </div>
     </div>
-
-    <!-- ============ VECTOR 5: CUSTODIA Y ENTREGA ============ -->
-    <div class="tab-pane fade" id="tab-custodia" role="tabpanel">
-      <div class="card shadow-sm card-vector vector-custodia">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-          <div>
-            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-box-seam me-2"></i>Paquetes en Custodia (Listos para Entrega)</h5>
-            <small class="text-muted">Inventario físico en taquilla. Al entregar, se generará un acta inmutable.</small>
-          </div>
-          <button class="btn btn-primary btn-sm fw-bold" onclick="cargarCustodia()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle">
-              <thead>
-                <tr>
-                  <th>Código</th>
-                  <th>Destinatario Original</th>
-                  <th>Piezas</th>
-                  <th>Fecha Recepción</th>
-                  <th>Días en Custodia</th>
-                  <th>Alerta</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="tablaCustodia">
-                <tr><td colspan="7" class="text-center py-4">Cargando inventario...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+    <!-- ============ VECTOR 5: CUSTODIA CON SEMÁFORO SLA + INCIDENCIAS ============ -->
+<div class="tab-pane fade" id="tab-custodia" role="tabpanel">
+  <div class="card shadow-sm card-vector vector-custodia">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+      <div>
+        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-box-seam me-2"></i>Paquetes en Custodia (Listos para Entrega)</h5>
+        <small class="text-muted">Inventario físico en taquilla. Semáforo SLA: 🟢 0-3 días | 🟡 4-7 días | 🔴 8-14 días | ⚫ +15 días (solo devolución)</small>
+      </div>
+      <button class="btn btn-primary btn-sm fw-bold" onclick="cargarCustodia()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Destinatario Original</th>
+              <th>Piezas</th>
+              <th>Fecha Recepción</th>
+              <th>Días en Custodia</th>
+              <th>SLA</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCustodia">
+            <tr><td colspan="7" class="text-center py-4">Cargando inventario...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
+  </div>
+</div>
 
     <!-- ============ VECTOR 6: DESPACHO DESDE LA OPT ============ -->
     <div class="tab-pane fade" id="tab-despacho" role="tabpanel">
