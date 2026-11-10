@@ -238,42 +238,54 @@ function ingresar() {
 
   if (['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO'].includes(rol)) {
     const clave = document.getElementById('claveDirecta').value.trim();
-    if (!clave) { Swal.fire('Atención', 'Ingrese la clave.', 'warning'); return; }
+    if (!clave) { Swal.fire('Atención', 'Ingrese la clave de acceso.', 'warning'); return; }
     payload.clave = clave;
+    if (rol === 'PRESIDENCIA') payload.usuario = 'Presidencia';
+    if (rol === 'DESPACHO') payload.usuario = 'Despacho';
+    if (rol === 'OBSERVATORIO') payload.usuario = 'Observatorio';
   } 
   else if (rol === 'DIRECCION') {
     const subRol = document.getElementById('selSubRol').value;
     const clave = document.getElementById('claveDirecta').value.trim();
     if (!subRol) { Swal.fire('Atención', 'Seleccione la Dirección.', 'warning'); return; }
-    if (!clave) { Swal.fire('Atención', 'Ingrese la clave.', 'warning'); return; }
+    if (!clave) { Swal.fire('Atención', 'Ingrese la clave de acceso.', 'warning'); return; }
     payload.subRol = subRol;
     payload.clave = clave;
+    payload.usuario = (subRol === 'CNC') ? 'Director_CNC' : 'Director_Operaciones';
   }
   else if (rol === 'COORDINADOR') {
     const coord = document.getElementById('selCoord').value;
     if (!coord) { Swal.fire('Atención', 'Seleccione el coordinador.', 'warning'); return; }
     payload.subRol = coord;
-    payload.correo = document.getElementById('correoNormal').value.trim();
-    payload.clave = document.getElementById('claveNormal').value.trim();
+    payload.correo = document.getElementById('registroCorreo').value.trim();
+    payload.nombre = document.getElementById('registroNombre').value.trim();
+    payload.cedula = document.getElementById('registroCedula').value.trim();
+    payload.clave = document.getElementById('registroClave').value.trim();
+    
+    if (!payload.correo || !payload.nombre || !payload.cedula || !payload.clave) {
+      Swal.fire('Atención', 'Complete todos los datos de registro.', 'warning'); return;
+    }
   }
   else if (rol === 'GERENCIA_ESTADO') {
-    payload.estado = document.getElementById('selEstado').value;
-    payload.correo = document.getElementById('correoNormal').value.trim();
-    payload.clave = document.getElementById('claveNormal').value.trim();
+    const estado = document.getElementById('selEstado').value;
+    if (!estado) { Swal.fire('Atención', 'Seleccione un estado.', 'warning'); return; }
+    
+    payload.estado = estado;
+    payload.correo = document.getElementById('registroCorreo').value.trim();
+    payload.nombre = document.getElementById('registroNombre').value.trim();
+    payload.cedula = document.getElementById('registroCedula').value.trim();
+    payload.clave = document.getElementById('registroClave').value.trim();
+    
+    if (!payload.correo || !payload.nombre || !payload.cedula || !payload.clave) {
+      Swal.fire('Atención', 'Complete todos los datos de registro.', 'warning'); return;
+    }
   }
   else if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
     payload.estado = document.getElementById('selEstado').value;
     payload.codigoOPT = document.getElementById('selOpt').value;
     payload.correo = document.getElementById('correoOPT').value.trim();
     payload.clave = document.getElementById('claveOPT').value.trim();
-  }
-
-  // Validaciones de campos vacíos
-  if (['COORDINADOR', 'GERENCIA_ESTADO'].includes(rol)) {
-    if (!payload.correo || !payload.clave) { Swal.fire('Atención', 'Complete correo y clave.', 'warning'); return; }
-  }
-  if (rol === 'GERENCIA_ESTADO' && !payload.estado) { Swal.fire('Atención', 'Seleccione un estado.', 'warning'); return; }
-  if (rol.includes('OPT')) {
+    
     if (!payload.estado || !payload.codigoOPT) { Swal.fire('Atención', 'Seleccione estado y OPT.', 'warning'); return; }
     if (!payload.correo || !payload.clave) { Swal.fire('Atención', 'Ingrese correo y clave.', 'warning'); return; }
   }
