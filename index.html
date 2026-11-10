@@ -242,7 +242,7 @@ function cambiarRol() {
   ocultarTodo();
   document.getElementById('btnVolver').classList.add('oculto');
   
-  // 🔥 SOLO ESTA LÍNEA SE AGREGA: Ocultar el botón de ingresar al inicio
+  // Ocultamos el botón de ingresar por defecto al elegir el rol
   document.getElementById('btnIngresar').classList.add('oculto');
 
   if (!rol) return;
@@ -250,19 +250,23 @@ function cambiarRol() {
 
   if (['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO'].includes(rol)) {
     document.getElementById('boxSoloClave').classList.remove('oculto');
-    document.getElementById('btnIngresar').classList.remove('oculto'); // Aquí sí se muestra porque es solo clave
-  } else if (rol === 'DIRECCION') {
+    document.getElementById('btnIngresar').classList.remove('oculto'); // Aquí sí aparece
+  } 
+  else if (rol === 'DIRECCION') {
     document.getElementById('boxSubRol').classList.remove('oculto');
     document.getElementById('btnVolver').classList.remove('oculto');
-  } else if (rol === 'COORDINADOR') {
+  } 
+  else if (rol === 'COORDINADOR') {
     document.getElementById('boxCoord').classList.remove('oculto');
     document.getElementById('btnVolver').classList.remove('oculto');
-  } else if (rol === 'GERENCIA_ESTADO') {
-    document.getElementById('boxEstado').classList.remove('oculto');
+  } 
+  else if (rol === 'GERENCIA_ESTADO') {
+    document.getElementById('boxEstado').classList.remove('oculto'); // 🔥 Muestra el estado
     document.getElementById('btnVolver').classList.remove('oculto');
     cargarEstados();
-  } else if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
-    document.getElementById('boxEstado').classList.remove('oculto');
+  } 
+  else if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
+    document.getElementById('boxEstado').classList.remove('oculto'); // 🔥 Muestra el estado
     document.getElementById('btnVolver').classList.remove('oculto');
     cargarEstados();
   }
