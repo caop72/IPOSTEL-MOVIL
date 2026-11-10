@@ -57,7 +57,7 @@
       <span class="subtitulo">Control y tracking vectorial de despachos</span>
     </div>
 
-    <!-- 1. SELECTOR DE ROL (Siempre visible primero) -->
+    <!-- 1. SELECTOR DE ROL -->
     <div class="mb-3">
       <label class="form-label text-primary">Seleccione su Rol</label>
       <select id="selRol" class="form-select fw-bold" onchange="cambiarRol()">
@@ -73,7 +73,7 @@
       </select>
     </div>
 
-    <!-- CONTENEDOR DINÁMICO DE ACUERDO AL ROL -->
+    <!-- CONTENEDOR DINÁMICO -->
     <div id="panelCredenciales" class="oculto">
       
       <!-- A. Roles de Acceso Directo y Dirección (Solo Clave) -->
@@ -82,7 +82,7 @@
         <input id="claveDirecta" type="password" class="form-control" placeholder="••••">
       </div>
 
-      <!-- B. Sub-selector de Dirección (CNC / Operaciones) -->
+      <!-- B. Sub-selector de Dirección -->
       <div id="boxSubRol" class="mb-3 oculto">
         <label class="form-label">Seleccione Dirección</label>
         <select id="selSubRol" class="form-select" onchange="cambiarSubRol()">
@@ -103,7 +103,7 @@
         </select>
       </div>
 
-      <!-- D. Credenciales Normales (Para Coordinadores, Gerentes, Jefes, Analistas) -->
+      <!-- D. Credenciales Normales -->
       <div id="boxCredencialesNormales" class="mb-3 oculto">
         <div class="mb-3">
           <label class="form-label">Usuario</label>
@@ -119,7 +119,7 @@
         </div>
       </div>
 
-      <!-- E. Estado y OPT (Para Gerentes y Jefes/Analistas) -->
+      <!-- E. Estado y OPT -->
       <div id="boxEstado" class="mb-3 oculto">
         <label class="form-label">Estado</label>
         <select id="selEstado" class="form-select" onchange="cambiarEstado()">
@@ -149,7 +149,7 @@
       <button id="btnIngresar" class="btn btn-ipostel w-100 mt-2" onclick="ingresar()">Ingresar al Sistema</button>
     </div>
 
-    <!-- F. Cambio de clave Obligatorio / Opcional (Aparece tras validar) -->
+    <!-- F. Cambio de clave Obligatorio / Opcional -->
     <div id="divCambioClave" class="oculto mt-3 p-3 bg-danger bg-opacity-10 rounded border border-danger">
       <p class="text-danger small fw-bold mb-2">⚠️ Cambio de clave</p>
       <p class="text-muted small mb-2" id="msgCambioClave">Debe establecer una nueva clave de 4 dígitos.</p>
@@ -176,15 +176,15 @@
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/TU_DEPLOY_ID/exec';
+// 🔥 TU URL REAL DE APPS SCRIPT INTEGRADA AQUÍ
+const API_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
 
 let loginResultado = null;
 
-// --- MAGIA DE VISIBILIDAD DE CAMPOS ---
+// --- MAGIA DE VISIBILIDAD ---
 function cambiarRol() {
   const rol = document.getElementById('selRol').value;
   
-  // Ocultar todo el panel y sub-campos al inicio
   document.getElementById('panelCredenciales').classList.add('oculto');
   document.getElementById('boxSoloClave').classList.add('oculto');
   document.getElementById('boxSubRol').classList.add('oculto');
@@ -199,7 +199,6 @@ function cambiarRol() {
   if (!rol) return;
   document.getElementById('panelCredenciales').classList.remove('oculto');
 
-  // Lógica por Rol
   if (['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO'].includes(rol)) {
     document.getElementById('boxSoloClave').classList.remove('oculto');
   } 
@@ -215,7 +214,7 @@ function cambiarRol() {
     cargarEstados();
   }
   else if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
-    document.getElementById('boxCredencialesNormales').classList.remove('oculto'); // Solo usuario
+    document.getElementById('boxCredencialesNormales').classList.remove('oculto');
     document.getElementById('boxEstado').classList.remove('oculto');
     cargarEstados();
   }
@@ -224,7 +223,6 @@ function cambiarRol() {
 function cambiarSubRol() {
   const subRol = document.getElementById('selSubRol').value;
   if (subRol) {
-    // Al seleccionar CNC u Operaciones, aparece solo la clave
     document.getElementById('boxSoloClave').classList.remove('oculto');
   } else {
     document.getElementById('boxSoloClave').classList.add('oculto');
@@ -234,7 +232,6 @@ function cambiarSubRol() {
 function cambiarCoord() {
   const coord = document.getElementById('selCoord').value;
   if (coord) {
-    // Al seleccionar un coordinador, aparecen sus credenciales normales
     document.getElementById('boxCredencialesNormales').classList.remove('oculto');
   } else {
     document.getElementById('boxCredencialesNormales').classList.add('oculto');
@@ -268,26 +265,32 @@ function cambiarOpt() {
 
 // --- CARGA DE DATOS ---
 function cargarEstados() {
-  fetch(API_URL, { method: 'POST', body: JSON.stringify({accion: 'obtenerEstados'}) })
-    .then(r => r.json()).then(r => {
-      if (r.exito) {
-        const sel = document.getElementById('selEstado');
-        sel.innerHTML = '<option value="">-- Seleccione Estado --</option>';
-        r.estados.forEach(e => sel.innerHTML += `<option value="${e}">${e}</option>`);
-      }
-    });
+  fetch(API_URL, { 
+    method: 'POST', 
+    body: JSON.stringify({accion: 'obtenerEstados'}) 
+  })
+  .then(r => r.json()).then(r => {
+    if (r.exito) {
+      const sel = document.getElementById('selEstado');
+      sel.innerHTML = '<option value="">-- Seleccione Estado --</option>';
+      r.estados.forEach(e => sel.innerHTML += `<option value="${e}">${e}</option>`);
+    }
+  }).catch(err => console.error('Error cargando estados:', err));
 }
 
 function cargarOPTs(estado) {
-  fetch(API_URL, { method: 'POST', body: JSON.stringify({accion: 'obtenerOPTsPorEstado', estado: estado}) })
-    .then(r => r.json()).then(r => {
-      if (r.exito) {
-        const sel = document.getElementById('selOpt');
-        sel.innerHTML = '<option value="">-- Seleccione OPT --</option>';
-        r.opts.forEach(o => sel.innerHTML += `<option value="${o.codigo}">${o.nombre}</option>`);
-        document.getElementById('boxOpt').classList.remove('oculto');
-      }
-    });
+  fetch(API_URL, { 
+    method: 'POST', 
+    body: JSON.stringify({accion: 'obtenerOPTsPorEstado', estado: estado}) 
+  })
+  .then(r => r.json()).then(r => {
+    if (r.exito) {
+      const sel = document.getElementById('selOpt');
+      sel.innerHTML = '<option value="">-- Seleccione OPT --</option>';
+      r.opts.forEach(o => sel.innerHTML += `<option value="${o.codigo}">${o.nombre}</option>`);
+      document.getElementById('boxOpt').classList.remove('oculto');
+    }
+  }).catch(err => console.error('Error cargando OPTs:', err));
 }
 
 // --- INGRESO Y VALIDACIÓN ---
@@ -302,7 +305,6 @@ function ingresar() {
     if (!clave) { Swal.fire('Atención', 'Ingrese la clave de acceso.', 'warning'); return; }
     payload.clave = clave;
     
-    // Para estos 3 roles, el backend asume el usuario internamente
     if (rol === 'PRESIDENCIA') payload.usuario = 'Presidencia';
     if (rol === 'DESPACHO') payload.usuario = 'Despacho';
     if (rol === 'OBSERVATORIO') payload.usuario = 'Observatorio';
@@ -314,8 +316,6 @@ function ingresar() {
     if (!clave) { Swal.fire('Atención', 'Ingrese la clave de acceso.', 'warning'); return; }
     payload.subRol = subRol;
     payload.clave = clave;
-    
-    // Los directores usarán el usuario de su área
     payload.usuario = (subRol === 'CNC') ? 'Director_CNC' : 'Director_Operaciones';
   }
   else if (rol === 'COORDINADOR') {
@@ -343,7 +343,6 @@ function ingresar() {
     payload.clave = document.getElementById('claveOPT').value.trim();
   }
 
-  // Validaciones básicas de campos vacíos
   if (['COORDINADOR', 'GERENCIA_ESTADO'].includes(rol)) {
     if (!payload.usuario || !payload.correo || !payload.clave) {
       Swal.fire('Atención', 'Complete usuario, correo y clave.', 'warning'); return;
@@ -361,7 +360,7 @@ function ingresar() {
   document.getElementById('btnIngresar').innerText = 'Validando...';
 
   post(payload).then(procesarLogin).catch(err => {
-    Swal.fire('Error', err.message, 'error');
+    Swal.fire('Error de conexión', err.message, 'error');
     document.getElementById('btnIngresar').disabled = false;
     document.getElementById('btnIngresar').innerText = 'Ingresar al Sistema';
   });
@@ -376,13 +375,11 @@ function procesarLogin(r) {
     return;
   }
 
-  // Si requiere cambio de clave, mostramos el panel
   if (r.requiereCambio) {
     loginResultado = r;
     document.getElementById('btnIngresar').classList.add('oculto');
     document.getElementById('divCambioClave').classList.remove('oculto');
     
-    // Mostrar el campo de correo SOLO si es Dirección, Jefe OPT o Analista OPT
     const rol = document.getElementById('selRol').value;
     if (rol === 'DIRECCION' || rol.includes('OPT')) {
       document.getElementById('boxCorreoRegistro').classList.remove('oculto');
@@ -412,14 +409,13 @@ function guardarClave() {
   if (loginResultado.codigoOPT) payload.codigoOPT = loginResultado.codigoOPT;
   if (loginResultado.usuario) payload.usuario = loginResultado.usuario;
   
-  // Obtener el correo dependiendo de dónde venga
   if (rol === 'DIRECCION') {
     payload.correo = document.getElementById('correoRegistro').value.trim();
     if (!payload.correo) { Swal.fire('Atención', 'Ingrese su correo oficial.', 'warning'); return; }
   } else if (rol.includes('OPT')) {
     payload.correo = document.getElementById('correoOPT').value.trim();
   } else {
-    payload.correo = ''; // Para Presidencia/Despacho/Observatorio no es necesario
+    payload.correo = '';
   }
 
   post(payload).then(resp => {
@@ -435,7 +431,13 @@ function redirigir(r) {
 }
 
 function recuperar() {
-  Swal.fire('Recuperar clave', 'Escriba su correo registrado:', 'question').then(res => {
+  Swal.fire({
+    title: 'Recuperar clave',
+    input: 'email',
+    inputLabel: 'Escriba su correo registrado',
+    inputPlaceholder: 'correo@ipostel.gob.ve',
+    showCancelButton: true
+  }).then(res => {
     if (res.isConfirmed && res.value) {
       post({ accion: 'recuperarClave', correo: res.value }).then(r => {
         if (r.exito) Swal.fire('📧 Enviada', r.mensaje, 'success');
@@ -445,11 +447,11 @@ function recuperar() {
   });
 }
 
+// ⚠️ FUNCIÓN POST LIMPIA (SIN HEADERS PARA EVITAR CORS)
 function post(payload) {
   return fetch(API_URL, {
     method: 'POST',
-    body: JSON.stringify(payload),
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    body: JSON.stringify(payload)
   }).then(r => r.json());
 }
 </script>
