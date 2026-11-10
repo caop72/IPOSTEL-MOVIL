@@ -241,12 +241,16 @@ function cambiarRol() {
   
   ocultarTodo();
   document.getElementById('btnVolver').classList.add('oculto');
+  
+  // 🔥 SOLO ESTA LÍNEA SE AGREGA: Ocultar el botón de ingresar al inicio
+  document.getElementById('btnIngresar').classList.add('oculto');
 
   if (!rol) return;
   document.getElementById('panelCredenciales').classList.remove('oculto');
 
   if (['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO'].includes(rol)) {
     document.getElementById('boxSoloClave').classList.remove('oculto');
+    document.getElementById('btnIngresar').classList.remove('oculto'); // Aquí sí se muestra porque es solo clave
   } else if (rol === 'DIRECCION') {
     document.getElementById('boxSubRol').classList.remove('oculto');
     document.getElementById('btnVolver').classList.remove('oculto');
