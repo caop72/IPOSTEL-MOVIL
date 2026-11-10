@@ -32,7 +32,7 @@
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#"><i class="bi bi-shop me-2"></i>IPOSTEL - Portal OPT</a>
             <div class="d-flex">
-                <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+                <a href="index.html" class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Cerrar Sesión</a>
             </div>
         </div>
     </nav>
@@ -50,28 +50,32 @@
             </div>
         </div>
 
-        <!-- SELECTOR DE ESTADO Y OPT -->
-        <div class="card mb-3 shadow-sm">
-            <div class="card-body">
-                <div class="row g-2 align-items-end">
-                    <div class="col-md-5">
-                        <label class="form-label fw-bold">1. Seleccione su Estado</label>
-                        <select class="form-select" id="selectEstadoOPT" onchange="cargarOPTsDelEstado()">
-                            <option value="">Seleccione un estado...</option>
-                        </select>
+        <!-- CONTEXTO DE SESIÓN (Reemplaza a los selectores) -->
+        <div id="cardContextoSesion" class="card mb-3 shadow-sm border-success d-none">
+            <div class="card-body bg-light rounded">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-1 text-primary fw-bold">
+                            <i class="bi bi-geo-alt-fill"></i> 
+                            <span id="lblNombreOPT">Cargando...</span>
+                        </h5>
+                        <p class="mb-0 text-muted small">
+                            <strong>Estado:</strong> <span id="lblEstado">---</span> | 
+                            <strong>Código OPT:</strong> <span id="lblCodigoOPT">---</span> | 
+                            <strong>Rol:</strong> <span id="lblRol">---</span>
+                        </p>
                     </div>
-                    <div class="col-md-5">
-                        <label class="form-label fw-bold">2. Seleccione su OPT</label>
-                        <select class="form-select" id="selectNombreOPT" disabled>
-                            <option value="">Primero seleccione un estado</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <button class="btn btn-primary w-100" onclick="cargarTodo()">Cargar Datos</button>
+                    <div class="col-md-4 text-end">
+                        <span class="badge bg-success p-2 fs-6">
+                            <i class="bi bi-check-circle-fill"></i> Sesión Activa
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Alerta de Error -->
+        <div id="alertError" class="alert alert-danger d-none" role="alert"></div>
 
         <!-- PESTAÑAS -->
         <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
@@ -107,7 +111,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="tablaPendientes">
-                                    <tr><td colspan="4" class="text-center py-4">Seleccione su Estado y OPT.</td></tr>
+                                    <tr><td colspan="4" class="text-center py-4">Cargando datos...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -140,7 +144,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="tablaEnviados">
-                                    <tr><td colspan="5" class="text-center py-4">Seleccione su Estado y OPT.</td></tr>
+                                    <tr><td colspan="5" class="text-center py-4">Cargando datos...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -164,7 +168,7 @@
                             <label class="form-label fw-bold">Estado Destino</label>
                             <select class="form-select" id="destinoEnvio" required>
                                 <option value="">Seleccione...</option>
-                                <option value="Caracas">Caracas</option>
+                                <option value="Caracas D.C.">Caracas D.C.</option>
                                 <option value="Amazonas">Amazonas</option>
                                 <option value="Anzoátegui">Anzoátegui</option>
                                 <option value="Apure">Apure</option>
@@ -217,17 +221,21 @@
         const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
         let modalEnvio;
 
+        // Variables globales de sesión
+        let estadoActual = '';
+        let optActual = '';
+        let rolActual = '';
+        let usuarioActual = '';
+
         document.addEventListener('DOMContentLoaded', async function () {
             modalEnvio = new bootstrap.Modal(document.getElementById('modalCargaEnvio'));
             
-            const resp = await fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerEstadosOPT' }) });
-            const data = await resp.json();
-            
-            if (data.exito) {
-                const selectEstado = document.getElementById('selectEstadoOPT');
-                data.estados.forEach(est => {
-                    selectEstado.innerHTML += `<option value="${est}">${est}</option>`;
-                });
+            try {
+                await inicializarPortal();
+            } catch (error) {
+                console.error('Error en inicialización:', error);
+                mostrarError('Error al cargar el portal. Redirigiendo al login...');
+                setTimeout(() => window.location.href = 'index.html', 2000);
             }
 
             document.getElementById('formCargaEnvio').addEventListener('submit', async (e) => {
@@ -235,8 +243,6 @@
                 const btn = document.getElementById('btnGuardarEnvio');
                 btn.disabled = true;
                 btn.innerHTML = 'Generando...';
-
-                const optActual = document.getElementById('selectNombreOPT').value;
 
                 const datos = {
                     accion: 'crearEnvioOPT',
@@ -275,6 +281,66 @@
             });
         });
 
+        async function inicializarPortal() {
+            const urlParams = new URLSearchParams(window.location.search);
+            estadoActual = urlParams.get('estado')?.trim() || '';
+            optActual = urlParams.get('opt')?.trim() || '';
+            rolActual = urlParams.get('rol')?.trim() || 'JEFE_OPT';
+            usuarioActual = urlParams.get('u')?.trim() || '';
+
+            if (!estadoActual || !optActual) {
+                throw new Error('Parámetros de sesión incompletos');
+            }
+
+            document.getElementById('cardContextoSesion').classList.remove('d-none');
+            document.getElementById('lblEstado').textContent = estadoActual;
+            document.getElementById('lblCodigoOPT').textContent = optActual;
+            document.getElementById('lblRol').textContent = (rolActual === 'ANALISTA_OPT') ? 'Analista de OPT' : 'Jefe de OPT';
+
+            await cargarInformacionOPT();
+        }
+
+        async function cargarInformacionOPT() {
+            try {
+                const response = await fetch(URL_APPS_SCRIPT, {
+                    method: 'POST',
+                    body: JSON.stringify({ accion: 'obtenerOPTsPorEstado', estado: estadoActual })
+                });
+
+                const data = await response.json();
+                
+                if (!data.exito || !data.opts) throw new Error('No se pudo obtener la información de la OPT');
+
+                const optEncontrada = data.opts.find(o => o.codigo === optActual);
+                
+                if (optEncontrada) {
+                    document.getElementById('lblNombreOPT').textContent = optEncontrada.nombre;
+                } else {
+                    document.getElementById('lblNombreOPT').textContent = optActual;
+                }
+
+                await cargarPendientes();
+                await cargarEnviados();
+
+            } catch (error) {
+                console.error('Error cargando OPT:', error);
+                document.getElementById('lblNombreOPT').textContent = `Error al cargar nombre de OPT`;
+            }
+        }
+
+        function mostrarError(mensaje) {
+            const alert = document.getElementById('alertError');
+            if (alert) {
+                alert.textContent = mensaje;
+                alert.classList.remove('d-none');
+            }
+        }
+
+        function cerrarSesion() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
         async function buscarPaqueteGlobal() {
             const codigo = document.getElementById('inputBusqueda').value.trim();
             if (!codigo) return Swal.fire('Atención', 'Ingrese un código de seguimiento.', 'warning');
@@ -305,44 +371,11 @@
             }
         }
 
-        async function cargarOPTsDelEstado() {
-            const estado = document.getElementById('selectEstadoOPT').value;
-            const selectOPT = document.getElementById('selectNombreOPT');
-            
-            if (!estado) {
-                selectOPT.innerHTML = '<option value="">Primero seleccione un estado</option>';
-                selectOPT.disabled = true;
-                return;
-            }
-
-            selectOPT.disabled = true;
-            selectOPT.innerHTML = '<option value="">Cargando...</option>';
-
-            const resp = await fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerOPTsPorEstado', estado: estado }) });
-            const data = await resp.json();
-
-            selectOPT.innerHTML = '';
-            if (data.exito && data.opts.length > 0) {
-                data.opts.forEach(opt => {
-                    selectOPT.innerHTML += `<option value="${opt}">${opt}</option>`;
-                });
-                selectOPT.disabled = false;
-            } else {
-                selectOPT.innerHTML = '<option value="">No hay OPTs en este estado</option>';
-            }
-        }
-
-        function cargarTodo() {
-            cargarPendientes();
-            cargarEnviados();
-        }
-
         async function cargarPendientes() {
-            const opt = document.getElementById('selectNombreOPT').value;
             const tbody = document.getElementById('tablaPendientes');
 
-            if (!opt) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Por favor, seleccione una OPT.</td></tr>';
+            if (!optActual) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Sesión no válida.</td></tr>';
                 return;
             }
 
@@ -351,7 +384,7 @@
             try {
                 const response = await fetch(URL_APPS_SCRIPT, {
                     method: 'POST',
-                    body: new URLSearchParams({ accion: 'obtenerPendientesOPT', opt: opt })
+                    body: new URLSearchParams({ accion: 'obtenerPendientesOPT', opt: optActual })
                 });
                 const data = await response.json();
 
@@ -382,11 +415,10 @@
         }
 
         async function cargarEnviados() {
-            const opt = document.getElementById('selectNombreOPT').value;
             const tbody = document.getElementById('tablaEnviados');
 
-            if (!opt) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Por favor, seleccione una OPT.</td></tr>';
+            if (!optActual) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Sesión no válida.</td></tr>';
                 return;
             }
 
@@ -400,7 +432,7 @@
                 const data = await response.json();
 
                 if (data.exito) {
-                    const enviados = data.masters.filter(m => m.origen === opt);
+                    const enviados = data.masters.filter(m => m.origen === optActual);
 
                     tbody.innerHTML = '';
                     if (enviados.length === 0) {
@@ -429,9 +461,8 @@
         }
 
         function abrirCargaEnvio() {
-            const opt = document.getElementById('selectNombreOPT').value;
-            if (!opt) {
-                Swal.fire('Atención', 'Primero seleccione su Estado y OPT.', 'warning');
+            if (!optActual) {
+                Swal.fire('Atención', 'No se ha identificado su OPT.', 'warning');
                 return;
             }
             modalEnvio.show();
