@@ -591,7 +591,7 @@ async function confirmarRecepcion() {
   }
 }
 
-// ============ VECTOR 5: CUSTODIA Y ENTREGA ============
+// ============ VECTOR 5: CUSTODIA CON SEMÁFORO SLA ============
 async function cargarCustodia() {
   const tbody = document.getElementById('tablaCustodia');
   tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Cargando...</td></tr>';
@@ -604,24 +604,44 @@ async function cargarCustodia() {
         return;
       }
       resp.paquetes.forEach(p => {
-        let badge = 'bg-success', texto = 'A tiempo', clase = '';
-        if (p.dias >= 5) { badge = 'bg-danger'; texto = 'CRÍTICO'; clase = 'fila-critica'; }
-        else if (p.dias >= 3) { badge = 'bg-warning text-dark'; texto = 'Retrasado'; clase = 'fila-alerta'; }
-        else if (p.dias >= 1) { badge = 'bg-info'; texto = 'En plazo'; }
+        // SEMÁFORO SLA
+        let badgeSLA, textoSLA, claseFila, botonesAccion;
+        
+        if (p.dias <= 3) {
+          badgeSLA = 'bg-success'; textoSLA = '🟢 A tiempo'; claseFila = '';
+        } else if (p.dias <= 7) {
+          badgeSLA = 'bg-warning text-dark'; textoSLA = '🟡 Recordatorio'; claseFila = 'fila-alerta';
+        } else if (p.dias <= 14) {
+          badgeSLA = 'bg-danger'; textoSLA = '🔴 Crítico'; claseFila = 'fila-critica';
+        } else {
+          badgeSLA = 'bg-dark'; textoSLA = '⚫ Vencido'; claseFila = 'fila-critica';
+        }
+
+        // BOTONES: Si está vencido (+15 días), solo permite devolución
+        if (p.dias > 14) {
+          botonesAccion = `
+            <button class="btn btn-sm btn-dark fw-bold" onclick='abrirModalIncidencia(${JSON.stringify(p)}, "DEVOLUCION")' title="Superó 15 días, debe devolverse">
+              <i class="bi bi-arrow-return-left"></i> Devolver
+            </button>`;
+        } else {
+          botonesAccion = `
+            <button class="btn btn-sm btn-primary fw-bold me-1" onclick='abrirModalEntregaUPAE(${JSON.stringify(p)})'>
+              <i class="bi bi-person-check"></i> Entregar
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick='abrirModalIncidencia(${JSON.stringify(p)}, "RECHAZO")' title="Rechazo por daño o incidencia">
+              <i class="bi bi-exclamation-triangle"></i>
+            </button>`;
+        }
 
         tbody.innerHTML += `
-          <tr class="${clase}">
+          <tr class="${claseFila}">
             <td><span class="codigo-5d">${p.codigo}</span></td>
             <td>${p.destinatario || '—'}</td>
             <td>${p.piezas}</td>
             <td>${p.fechaRecepcion}</td>
             <td><b>${p.dias}</b> día(s)</td>
-            <td><span class="badge ${badge}">${texto}</span></td>
-            <td>
-              <button class="btn btn-sm btn-primary fw-bold" onclick='abrirModalEntregaUPAE(${JSON.stringify(p)})'>
-                <i class="bi bi-person-check"></i> Entregar
-              </button>
-            </td>
+            <td><span class="badge ${badgeSLA}">${textoSLA}</span></td>
+            <td>${botonesAccion}</td>
           </tr>`;
       });
     }
