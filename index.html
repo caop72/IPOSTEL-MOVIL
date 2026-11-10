@@ -8,56 +8,27 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
   :root { --azul: #0d1b5e; --cyan: #00d2ff; }
-  
-  body { 
-    background: linear-gradient(135deg, var(--azul) 0%, #1c2f8a 100%); 
-    min-height: 100vh; 
-    display: flex; 
-    align-items: center; 
-    font-family: 'Segoe UI', sans-serif; 
-    color: #fff;
-  }
-  
-  .card-ipostel { 
-    background: #fff; 
-    color: #222;
-    border-radius: 16px; 
-    box-shadow: 0 10px 30px rgba(0,0,0,.3); 
-    width: 100%; 
-    max-width: 500px; 
-    margin: auto; 
-  }
-  
+  body { background: linear-gradient(135deg, var(--azul) 0%, #1c2f8a 100%); min-height: 100vh; display: flex; align-items: center; font-family: 'Segoe UI', sans-serif; color: #fff; }
+  .card-ipostel { background: #fff; color: #222; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.3); width: 100%; max-width: 500px; margin: auto; }
   .titulo { color: var(--azul); font-weight: 700; margin-bottom: 0; }
   .subtitulo { color: #6c757d; font-size: 0.9rem; }
-
-  .btn-ipostel { 
-    background: var(--azul); color: #fff; font-weight: 600; 
-    border: none; padding: 12px; border-radius: 8px; transition: 0.3s;
-  }
+  .btn-ipostel { background: var(--azul); color: #fff; font-weight: 600; border: none; padding: 12px; border-radius: 8px; transition: 0.3s; }
   .btn-ipostel:hover { background: #081447; color: var(--cyan); }
-
   .form-label { font-weight: 600; color: #444; font-size: 0.85rem; margin-bottom: 4px; }
   .form-control, .form-select { border-radius: 8px; border: 1px solid #ced4da; font-size: 0.95rem; }
   .form-control:focus, .form-select:focus { border-color: var(--cyan); box-shadow: 0 0 0 0.25rem rgba(0, 210, 255, 0.25); }
-
   .oculto { display: none !important; }
-  
   .box-clave { background: #f8f9fa; border-radius: 8px; padding: 15px; border: 1px solid #e9ecef; }
-  .text-cyan { color: var(--cyan); font-weight: bold; }
 </style>
 </head>
 <body>
-
 <div class="container py-4">
   <div class="card card-ipostel p-4 p-md-5">
-    
     <div class="text-center mb-4">
       <h2 class="titulo">IPOSTEL Móvil</h2>
       <span class="subtitulo">Control y tracking vectorial de despachos</span>
     </div>
 
-    <!-- 1. SELECTOR DE ROL -->
     <div class="mb-3">
       <label class="form-label text-primary">Seleccione su Rol</label>
       <select id="selRol" class="form-select fw-bold" onchange="cambiarRol()">
@@ -73,16 +44,11 @@
       </select>
     </div>
 
-    <!-- CONTENEDOR DINÁMICO -->
     <div id="panelCredenciales" class="oculto">
-      
-      <!-- A. Roles de Acceso Directo y Dirección (Solo Clave) -->
       <div id="boxSoloClave" class="mb-3 box-clave oculto">
         <label class="form-label">Clave de Acceso (Inicial: 1234)</label>
         <input id="claveDirecta" type="password" class="form-control" placeholder="••••">
       </div>
-
-      <!-- B. Sub-selector de Dirección -->
       <div id="boxSubRol" class="mb-3 oculto">
         <label class="form-label">Seleccione Dirección</label>
         <select id="selSubRol" class="form-select" onchange="cambiarSubRol()">
@@ -91,8 +57,6 @@
           <option value="OPERACIONES">Dirección de Operaciones</option>
         </select>
       </div>
-
-      <!-- C. Sub-selector de Coordinador -->
       <div id="boxCoord" class="mb-3 oculto">
         <label class="form-label">Seleccione Coordinación</label>
         <select id="selCoord" class="form-select" onchange="cambiarCoord()">
@@ -102,8 +66,6 @@
           <option value="CNC_MICRO">CNC-Micro Entrega (José)</option>
         </select>
       </div>
-
-      <!-- D. Credenciales Normales -->
       <div id="boxCredencialesNormales" class="mb-3 oculto">
         <div class="mb-3">
           <label class="form-label">Usuario</label>
@@ -118,23 +80,18 @@
           <input id="claveNormal" type="password" class="form-control" placeholder="••••">
         </div>
       </div>
-
-      <!-- E. Estado y OPT -->
       <div id="boxEstado" class="mb-3 oculto">
         <label class="form-label">Estado</label>
         <select id="selEstado" class="form-select" onchange="cambiarEstado()">
           <option value="">-- Seleccione Estado --</option>
         </select>
       </div>
-
       <div id="boxOpt" class="mb-3 oculto">
         <label class="form-label">OPT</label>
         <select id="selOpt" class="form-select" onchange="cambiarOpt()">
           <option value="">-- Seleccione OPT --</option>
         </select>
       </div>
-
-      <!-- Credenciales extra solo para Jefe/Analista OPT -->
       <div id="boxCredencialesOPT" class="mb-3 box-clave oculto">
         <p class="text-primary small fw-bold mb-2">Credenciales de la OPT</p>
         <div class="mb-2">
@@ -144,21 +101,16 @@
           <input id="claveOPT" type="password" class="form-control" placeholder="Clave inicial (1234)">
         </div>
       </div>
-
-      <!-- Botón de Ingreso -->
       <button id="btnIngresar" class="btn btn-ipostel w-100 mt-2" onclick="ingresar()">Ingresar al Sistema</button>
     </div>
 
-    <!-- F. Cambio de clave Obligatorio / Opcional -->
     <div id="divCambioClave" class="oculto mt-3 p-3 bg-danger bg-opacity-10 rounded border border-danger">
       <p class="text-danger small fw-bold mb-2">⚠️ Cambio de clave</p>
       <p class="text-muted small mb-2" id="msgCambioClave">Debe establecer una nueva clave de 4 dígitos.</p>
-      
       <div id="boxCorreoRegistro" class="mb-2 oculto">
         <label class="form-label small">Registre su Correo Oficial</label>
         <input id="correoRegistro" type="email" class="form-control form-control-sm" placeholder="correo@ipostel.gob.ve">
       </div>
-      
       <div class="mb-2">
         <input id="nuevaClave" type="password" maxlength="4" inputmode="numeric" class="form-control form-control-sm" placeholder="Nueva clave (4 dígitos)">
       </div>
@@ -171,20 +123,15 @@
     <div class="text-center mt-3">
       <a href="#" onclick="recuperar()" class="small text-decoration-none text-muted">¿Olvidó su clave?</a>
     </div>
-
   </div>
 </div>
 
 <script>
-// URL DE APPS SCRIPT
 const API_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
-
 let loginResultado = null;
 
-// --- MAGIA DE VISIBILIDAD ---
 function cambiarRol() {
   const rol = document.getElementById('selRol').value;
-  
   document.getElementById('panelCredenciales').classList.add('oculto');
   document.getElementById('boxSoloClave').classList.add('oculto');
   document.getElementById('boxSubRol').classList.add('oculto');
@@ -201,19 +148,15 @@ function cambiarRol() {
 
   if (['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO'].includes(rol)) {
     document.getElementById('boxSoloClave').classList.remove('oculto');
-  } 
-  else if (rol === 'DIRECCION') {
+  } else if (rol === 'DIRECCION') {
     document.getElementById('boxSubRol').classList.remove('oculto');
-  }
-  else if (rol === 'COORDINADOR') {
+  } else if (rol === 'COORDINADOR') {
     document.getElementById('boxCoord').classList.remove('oculto');
-  }
-  else if (rol === 'GERENCIA_ESTADO') {
+  } else if (rol === 'GERENCIA_ESTADO') {
     document.getElementById('boxCredencialesNormales').classList.remove('oculto');
     document.getElementById('boxEstado').classList.remove('oculto');
     cargarEstados();
-  }
-  else if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
+  } else if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
     document.getElementById('boxCredencialesNormales').classList.remove('oculto');
     document.getElementById('boxEstado').classList.remove('oculto');
     cargarEstados();
@@ -222,67 +165,45 @@ function cambiarRol() {
 
 function cambiarSubRol() {
   const subRol = document.getElementById('selSubRol').value;
-  if (subRol) {
-    document.getElementById('boxSoloClave').classList.remove('oculto');
-  } else {
-    document.getElementById('boxSoloClave').classList.add('oculto');
-  }
+  if (subRol) document.getElementById('boxSoloClave').classList.remove('oculto');
+  else document.getElementById('boxSoloClave').classList.add('oculto');
 }
 
 function cambiarCoord() {
   const coord = document.getElementById('selCoord').value;
-  if (coord) {
-    document.getElementById('boxCredencialesNormales').classList.remove('oculto');
-  } else {
-    document.getElementById('boxCredencialesNormales').classList.add('oculto');
-  }
+  if (coord) document.getElementById('boxCredencialesNormales').classList.remove('oculto');
+  else document.getElementById('boxCredencialesNormales').classList.add('oculto');
 }
 
 function cambiarEstado() {
   const estado = document.getElementById('selEstado').value;
   const rol = document.getElementById('selRol').value;
-  
   document.getElementById('boxOpt').classList.add('oculto');
   document.getElementById('boxCredencialesOPT').classList.add('oculto');
-  
   if (!estado) return;
-
-  if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
-    cargarOPTs(estado);
-  }
+  if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') cargarOPTs(estado);
 }
 
 function cambiarOpt() {
   const opt = document.getElementById('selOpt').value;
   const rol = document.getElementById('selRol').value;
-  
-  if (opt && (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT')) {
-    document.getElementById('boxCredencialesOPT').classList.remove('oculto');
-  } else {
-    document.getElementById('boxCredencialesOPT').classList.add('oculto');
-  }
+  if (opt && (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT')) document.getElementById('boxCredencialesOPT').classList.remove('oculto');
+  else document.getElementById('boxCredencialesOPT').classList.add('oculto');
 }
 
-// --- CARGA DE DATOS ---
 function cargarEstados() {
-  fetch(API_URL, { 
-    method: 'POST', 
-    body: JSON.stringify({accion: 'obtenerEstados'}) 
-  })
+  fetch(API_URL, { method: 'POST', body: JSON.stringify({accion: 'obtenerEstados'}) })
   .then(r => r.json()).then(r => {
     if (r.exito) {
       const sel = document.getElementById('selEstado');
       sel.innerHTML = '<option value="">-- Seleccione Estado --</option>';
       r.estados.forEach(e => sel.innerHTML += `<option value="${e}">${e}</option>`);
     }
-  }).catch(err => console.error('Error cargando estados:', err));
+  });
 }
 
 function cargarOPTs(estado) {
-  fetch(API_URL, { 
-    method: 'POST', 
-    body: JSON.stringify({accion: 'obtenerOPTsPorEstado', estado: estado}) 
-  })
+  fetch(API_URL, { method: 'POST', body: JSON.stringify({accion: 'obtenerOPTsPorEstado', estado: estado}) })
   .then(r => r.json()).then(r => {
     if (r.exito) {
       const sel = document.getElementById('selOpt');
@@ -290,26 +211,22 @@ function cargarOPTs(estado) {
       r.opts.forEach(o => sel.innerHTML += `<option value="${o.codigo}">${o.nombre}</option>`);
       document.getElementById('boxOpt').classList.remove('oculto');
     }
-  }).catch(err => console.error('Error cargando OPTs:', err));
+  });
 }
 
-// --- INGRESO Y VALIDACIÓN ---
 function ingresar() {
   const rol = document.getElementById('selRol').value;
   if (!rol) { Swal.fire('Atención', 'Seleccione un rol.', 'warning'); return; }
-
   let payload = { accion: 'loginArbol', rol: rol };
 
   if (['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO'].includes(rol)) {
     const clave = document.getElementById('claveDirecta').value.trim();
     if (!clave) { Swal.fire('Atención', 'Ingrese la clave de acceso.', 'warning'); return; }
     payload.clave = clave;
-    
     if (rol === 'PRESIDENCIA') payload.usuario = 'Presidencia';
     if (rol === 'DESPACHO') payload.usuario = 'Despacho';
     if (rol === 'OBSERVATORIO') payload.usuario = 'Observatorio';
-  } 
-  else if (rol === 'DIRECCION') {
+  } else if (rol === 'DIRECCION') {
     const subRol = document.getElementById('selSubRol').value;
     const clave = document.getElementById('claveDirecta').value.trim();
     if (!subRol) { Swal.fire('Atención', 'Seleccione la Dirección.', 'warning'); return; }
@@ -317,23 +234,20 @@ function ingresar() {
     payload.subRol = subRol;
     payload.clave = clave;
     payload.usuario = (subRol === 'CNC') ? 'Director_CNC' : 'Director_Operaciones';
-  }
-  else if (rol === 'COORDINADOR') {
+  } else if (rol === 'COORDINADOR') {
     const coord = document.getElementById('selCoord').value;
     if (!coord) { Swal.fire('Atención', 'Seleccione el coordinador.', 'warning'); return; }
     payload.subRol = coord;
     payload.usuario = document.getElementById('usuarioNormal').value.trim();
     payload.correo = document.getElementById('correoNormal').value.trim();
     payload.clave = document.getElementById('claveNormal').value.trim();
-  }
-  else if (rol === 'GERENCIA_ESTADO') {
+  } else if (rol === 'GERENCIA_ESTADO') {
     const estado = document.getElementById('selEstado').value;
     payload.usuario = document.getElementById('usuarioNormal').value.trim();
     payload.correo = document.getElementById('correoNormal').value.trim();
     payload.clave = document.getElementById('claveNormal').value.trim();
     payload.estado = estado;
-  }
-  else if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
+  } else if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
     const estado = document.getElementById('selEstado').value;
     const opt = document.getElementById('selOpt').value;
     payload.usuario = document.getElementById('usuarioNormal').value.trim();
@@ -344,13 +258,9 @@ function ingresar() {
   }
 
   if (['COORDINADOR', 'GERENCIA_ESTADO'].includes(rol)) {
-    if (!payload.usuario || !payload.correo || !payload.clave) {
-      Swal.fire('Atención', 'Complete usuario, correo y clave.', 'warning'); return;
-    }
+    if (!payload.usuario || !payload.correo || !payload.clave) { Swal.fire('Atención', 'Complete usuario, correo y clave.', 'warning'); return; }
   }
-  if (rol === 'GERENCIA_ESTADO' && !payload.estado) {
-    Swal.fire('Atención', 'Seleccione un estado.', 'warning'); return;
-  }
+  if (rol === 'GERENCIA_ESTADO' && !payload.estado) { Swal.fire('Atención', 'Seleccione un estado.', 'warning'); return; }
   if (rol.includes('OPT')) {
     if (!payload.estado || !payload.codigoOPT) { Swal.fire('Atención', 'Seleccione estado y OPT.', 'warning'); return; }
     if (!payload.correo || !payload.clave) { Swal.fire('Atención', 'Ingrese correo y clave de la OPT.', 'warning'); return; }
@@ -369,17 +279,11 @@ function ingresar() {
 function procesarLogin(r) {
   document.getElementById('btnIngresar').disabled = false;
   document.getElementById('btnIngresar').innerText = 'Ingresar al Sistema';
-
-  if (!r.exito) {
-    Swal.fire('Acceso denegado', r.mensaje || 'No autorizado', 'error');
-    return;
-  }
-
+  if (!r.exito) { Swal.fire('Acceso denegado', r.mensaje || 'No autorizado', 'error'); return; }
   if (r.requiereCambio) {
     loginResultado = r;
     document.getElementById('btnIngresar').classList.add('oculto');
     document.getElementById('divCambioClave').classList.remove('oculto');
-    
     const rol = document.getElementById('selRol').value;
     if (rol === 'DIRECCION' || rol.includes('OPT')) {
       document.getElementById('boxCorreoRegistro').classList.remove('oculto');
@@ -388,24 +292,20 @@ function procesarLogin(r) {
       document.getElementById('boxCorreoRegistro').classList.add('oculto');
       document.getElementById('msgCambioClave').innerText = 'Por seguridad, establezca una nueva clave de 4 dígitos.';
     }
-    
     Swal.fire('Cambio de clave', 'Debe actualizar sus credenciales para continuar.', 'info');
     return;
   }
-
   redirigir(r);
 }
 
 function guardarClave() {
   const n1 = document.getElementById('nuevaClave').value.trim();
   const n2 = document.getElementById('confirmarClave').value.trim();
-  
   if (!/^\d{4}$/.test(n1)) { Swal.fire('Inválida', 'La clave debe tener 4 dígitos numéricos.', 'warning'); return; }
   if (n1 !== n2) { Swal.fire('Error', 'Las claves no coinciden.', 'warning'); return; }
 
   const rol = document.getElementById('selRol').value;
   const payload = { accion: 'cambiarClave', nuevaClave: n1 };
-  
   if (loginResultado.codigoOPT) payload.codigoOPT = loginResultado.codigoOPT;
   if (loginResultado.usuario) payload.usuario = loginResultado.usuario;
   
@@ -414,27 +314,16 @@ function guardarClave() {
     if (!payload.correo) { Swal.fire('Atención', 'Ingrese su correo oficial.', 'warning'); return; }
   } else if (rol.includes('OPT')) {
     payload.correo = document.getElementById('correoOPT').value.trim();
-  } else {
-    payload.correo = '';
-  }
+  } else { payload.correo = ''; }
 
   post(payload).then(resp => {
     if (!resp.exito) { Swal.fire('Error', resp.mensaje, 'error'); return; }
-    
-    // 🔥 FIX: Forzamos la redirección guardando los datos de sesión manualmente
     const u = encodeURIComponent(loginResultado.usuario || '');
-    
-    // Determinamos la pantalla destino
     let pantalla = loginResultado.pantalla;
     if (!pantalla) {
-      if (rol === 'PRESIDENCIA' || rol === 'DESPACHO' || rol === 'OBSERVATORIO') {
-        pantalla = 'observatorio.html';
-      } else if (rol === 'DIRECCION') {
-        pantalla = (document.getElementById('selSubRol').value === 'CNC') ? 'microentregas.html' : 'observatorio.html';
-      }
+      if (rol === 'PRESIDENCIA' || rol === 'DESPACHO' || rol === 'OBSERVATORIO') pantalla = 'observatorio.html';
+      else if (rol === 'DIRECCION') pantalla = (document.getElementById('selSubRol').value === 'CNC') ? 'microentregas.html' : 'observatorio.html';
     }
-    
-    // Guardamos la sesión para que el observatorio lo deje pasar
     sessionStorage.setItem('ipostel_rol', rol);
     sessionStorage.setItem('ipostel_usuario', loginResultado.usuario || '');
     sessionStorage.setItem('usuario', loginResultado.usuario || '');
@@ -448,23 +337,17 @@ function guardarClave() {
 function redirigir(r) {
   const u = encodeURIComponent(r.usuario || '');
   const rol = r.rol || '';
-  
-  // Guardamos en sesión
   sessionStorage.setItem('ipostel_rol', rol);
   sessionStorage.setItem('ipostel_usuario', r.usuario || '');
   sessionStorage.setItem('usuario', r.usuario || '');
-
   const destino = r.pantalla + (r.pantalla.includes('?') ? '&' : '?') + 'u=' + u + '&rol=' + encodeURIComponent(rol);
   window.location.href = destino;
 }
 
 function recuperar() {
   Swal.fire({
-    title: 'Recuperar clave',
-    input: 'email',
-    inputLabel: 'Escriba su correo registrado',
-    inputPlaceholder: 'correo@ipostel.gob.ve',
-    showCancelButton: true
+    title: 'Recuperar clave', input: 'email', inputLabel: 'Escriba su correo registrado',
+    inputPlaceholder: 'correo@ipostel.gob.ve', showCancelButton: true
   }).then(res => {
     if (res.isConfirmed && res.value) {
       post({ accion: 'recuperarClave', correo: res.value }).then(r => {
@@ -475,12 +358,8 @@ function recuperar() {
   });
 }
 
-// FUNCIÓN POST (SIN HEADERS PARA EVITAR CORS)
 function post(payload) {
-  return fetch(API_URL, {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  }).then(r => r.json());
+  return fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
 }
 </script>
 </body>
