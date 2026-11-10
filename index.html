@@ -171,19 +171,17 @@ function cambiarEstado() {
   const estado = document.getElementById('selEstado').value;
   const rol = document.getElementById('selRol').value;
   
-  // Si cambia o borra el estado, ocultamos correo y clave
   document.getElementById('boxCredencialesNormales').classList.add('oculto');
   document.getElementById('boxOpt').classList.add('oculto');
   document.getElementById('boxCredencialesOPT').classList.add('oculto');
 
   if (!estado) return;
 
-  // Si es Gerencia de Estado y ya eligió estado, AHORA SÍ mostramos correo y clave
   if (rol === 'GERENCIA_ESTADO') {
+    // Mostramos el panel de registro al elegir estado
     document.getElementById('boxCredencialesNormales').classList.remove('oculto');
   }
   
-  // Si es OPT, cargamos las OPT de ese estado
   if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
     cargarOPTs(estado);
   }
