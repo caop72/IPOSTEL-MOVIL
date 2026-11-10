@@ -334,14 +334,45 @@ function guardarClave() {
   });
 }
 
+// 🔥 FUNCIÓN BLINDADA CONTRA REDIRECCIONES CIRCULARES
 function redirigir(r) {
-  const u = encodeURIComponent(r.usuario || '');
-  const rol = r.rol || '';
+  const rol = (r.rol || document.getElementById('selRol').value || '').trim().toUpperCase();
+  const usuario = r.usuario || '';
+
   sessionStorage.setItem('ipostel_rol', rol);
-  sessionStorage.setItem('ipostel_usuario', r.usuario || '');
-  sessionStorage.setItem('usuario', r.usuario || '');
-  const destino = r.pantalla + (r.pantalla.includes('?') ? '&' : '?') + 'u=' + u + '&rol=' + encodeURIComponent(rol);
-  window.location.href = destino;
+  sessionStorage.setItem('ipostel_usuario', usuario);
+  sessionStorage.setItem('usuario', usuario);
+
+  const rutasPorRol = {
+    PRESIDENCIA: 'observatorio.html',
+    DESPACHO: 'observatorio.html',
+    OBSERVATORIO: 'observatorio.html',
+    CNC: 'microentregas.html',
+    DIR_OPER: 'observatorio.html',
+    DIR_CNC: 'microentregas.html',
+    GERENTE_ESTADO: 'estados.html',
+    COORD_ENCAM: 'encaminamiento.html',
+    COORD_ALIANZA: 'seguimiento.html',
+    COORD_CNC: 'coordinador_cnc.html',
+    JEFE_OPT: 'portal_opt.html',
+    ANALISTA_OPT: 'portal_opt.html'
+  };
+
+  let pantalla = r.pantalla;
+
+  if (!pantalla || pantalla === 'index.html' || pantalla === '/' || pantalla === 'https://caop72.github.io/IPOSTEL-MOVIL/') {
+    pantalla = rutasPorRol[rol] || 'observatorio.html';
+  }
+
+  if (!pantalla.endsWith('.html')) {
+    Swal.fire('Error de configuración', 'El servidor no devolvió una pantalla válida.', 'error');
+    return;
+  }
+
+  const destino = pantalla + (pantalla.includes('?') ? '&' : '?') + 'u=' + encodeURIComponent(usuario) + '&rol=' + encodeURIComponent(rol);
+  
+  console.log('Redirigiendo a:', destino, '| Respuesta:', r);
+  window.location.replace(destino);
 }
 
 function recuperar() {
