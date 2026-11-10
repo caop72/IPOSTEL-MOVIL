@@ -37,8 +37,6 @@
 </nav>
 
 <div class="container-fluid px-3">
-
-  <!-- FILTROS GENERALES -->
   <div class="card mb-3">
     <div class="card-header py-2">🔍 Filtros de Búsqueda</div>
     <div class="card-body">
@@ -59,7 +57,6 @@
     </div>
   </div>
 
-  <!-- PESTAÑAS -->
   <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" onclick="cargarGeneral()">📊 Resumen Gráfico</button>
@@ -73,8 +70,6 @@
   </ul>
 
   <div class="tab-content" id="myTabContent">
-    
-    <!-- PESTAÑA 1: GENERAL -->
     <div class="tab-pane fade show active" id="general" role="tabpanel">
       <div class="row g-2 mb-3">
         <div class="col-6 col-md-3"><div class="card p-2 text-center border-start border-4 border-primary"><small class="text-muted fw-bold">Total Masters</small><h4 class="text-primary mb-0" id="totalMasters">0</h4></div></div>
@@ -82,14 +77,12 @@
         <div class="col-6 col-md-3"><div class="card p-2 text-center border-start border-4 border-info"><small class="text-muted fw-bold">Peso Total (Kg)</small><h4 class="text-info mb-0" id="totalPeso">0</h4></div></div>
         <div class="col-6 col-md-3"><div class="card p-2 text-center border-start border-4 border-danger"><small class="text-muted fw-bold">En Riesgo (Retrasos)</small><h4 class="text-danger mb-0" id="totalRetrasos">0</h4></div></div>
       </div>
-
       <div class="row g-3 mb-3">
         <div class="col-md-6"><div class="card"><div class="card-header py-2">📊 Estado de los Masters</div><div class="card-body"><div class="chart-container"><canvas id="graficoEstatus"></canvas></div></div></div></div>
         <div class="col-md-6"><div class="card"><div class="card-header py-2">🍩 Top Destinos (Piezas)</div><div class="card-body"><div class="chart-container"><canvas id="graficoDestinos"></canvas></div></div></div></div>
       </div>
     </div>
 
-    <!-- PESTAÑA 2: TABLERO DE OPERACIONES -->
     <div class="tab-pane fade" id="tablero" role="tabpanel">
       <div class="row mb-3 g-2">
           <div class="col-md-6">
@@ -115,7 +108,6 @@
               </div>
           </div>
       </div>
-
       <div class="card mb-3 shadow-sm border-primary">
         <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
             <span>🛫 Tablero de Control (Vectores y Tiempos)</span>
@@ -140,14 +132,11 @@
       </div>
     </div>
 
-    <!-- PESTAÑA 3: CUADRO DE RELACIÓN -->
     <div class="tab-pane fade" id="relacion" role="tabpanel">
       <div class="row" id="contenedorRelacion"></div>
     </div>
-
   </div>
 
-  <!-- BOTÓN DE REPORTES -->
   <div class="row mb-4 mt-2" id="bloqueReportes">
     <div class="col-12">
       <div class="card">
@@ -160,13 +149,11 @@
       </div>
     </div>
   </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
-  
   let chartEstatus, chartDestinos;
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -182,18 +169,19 @@
     if (rolActual) sessionStorage.setItem('ipostel_rol', rolActual);
     if (usuarioLogueado) sessionStorage.setItem('ipostel_usuario', usuarioLogueado);
 
-    // 3. Lista de roles permitidos (Los 3 directos + Director de Operaciones)
+    // 3. Lista de roles permitidos
     const rolesPermitidos = ['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO', 'DIR_OPER', 'DIR_OPERACIONES', 'DIRECTOR_OPERACIONES'];
 
+    // 4. Si NO hay usuario o el rol NO está permitido, lo pateamos al login
     if (!usuarioLogueado || !rolesPermitidos.includes(rolActual)) { 
         setTimeout(() => { window.location.href = 'index.html'; }, 100); 
         return; 
     }
     
-    // 4. Mostrar nombre en la barra superior
+    // 5. Mostrar nombre en la barra superior
     document.getElementById('nombreUsuario').innerText = usuarioLogueado;
 
-    // 5. Filtros por defecto (hoy)
+    // 6. Filtros por defecto (hoy)
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById('filtroDesde').value = hoy;
     document.getElementById('filtroHasta').value = hoy;
@@ -223,7 +211,6 @@
     }
   }
 
-  // --- PESTAÑA 1: GRAFICOS ---
   function cargarGeneral() {
     const filtros = obtenerFiltros();
     fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerEstadisticas', ...filtros }) })
@@ -252,7 +239,6 @@
     }
   }
 
-  // --- PESTAÑA 2: TABLERO DE OPERACIONES ---
   function cargarTablero() {
     const filtros = obtenerFiltros();
     const tbody = document.getElementById('tablaTablero');
@@ -277,26 +263,10 @@
                 let textoAlerta = 'A Tiempo';
                 let iconoAlerta = 'bi-check-circle';
 
-                if (op.estaRetrasado) { 
-                    badgeAlerta = 'bg-danger'; 
-                    textoAlerta = 'RETRASADO'; 
-                    iconoAlerta = 'bi-exclamation-triangle';
-                } 
-                else if (!op.haLlegado && op.alerta === 'RETRASO') { 
-                    badgeAlerta = 'bg-warning text-dark'; 
-                    textoAlerta = 'En Riesgo'; 
-                    iconoAlerta = 'bi-clock';
-                }
-                else if (!op.haLlegado) {
-                    badgeAlerta = 'bg-primary'; 
-                    textoAlerta = 'En Tránsito'; 
-                    iconoAlerta = 'bi-truck';
-                }
-                else if (op.haLlegado) {
-                    badgeAlerta = 'bg-success'; 
-                    textoAlerta = 'Llegó a Destino'; 
-                    iconoAlerta = 'bi-check-circle';
-                }
+                if (op.estaRetrasado) { badgeAlerta = 'bg-danger'; textoAlerta = 'RETRASADO'; iconoAlerta = 'bi-exclamation-triangle'; } 
+                else if (!op.haLlegado && op.alerta === 'RETRASO') { badgeAlerta = 'bg-warning text-dark'; textoAlerta = 'En Riesgo'; iconoAlerta = 'bi-clock'; }
+                else if (!op.haLlegado) { badgeAlerta = 'bg-primary'; textoAlerta = 'En Tránsito'; iconoAlerta = 'bi-truck'; }
+                else if (op.haLlegado) { badgeAlerta = 'bg-success'; textoAlerta = 'Llegó a Destino'; iconoAlerta = 'bi-check-circle'; }
 
                 let claseFila = op.estaRetrasado ? 'table-danger' : '';
 
@@ -304,20 +274,9 @@
                     <tr class="${claseFila}">
                         <td class="fw-bold text-primary">${op.id}</td>
                         <td><span class="badge-vector">${op.vector}</span></td>
-                        <td>
-                            <div class="small text-muted">${op.fechaSalida}</div>
-                            <div class="small fw-bold">${op.dias}d ${op.horas % 24}h</div>
-                        </td>
-                        <td>
-                            <span class="badge bg-secondary mb-1">${op.estatus}</span>
-                            ${op.guiaMrw ? `<br><small class="text-muted">MRW: ${op.guiaMrw}</small>` : ''}
-                        </td>
-                        <td>
-                            <span class="badge ${badgeAlerta}">
-                                <i class="bi ${iconoAlerta}"></i> ${textoAlerta}
-                            </span>
-                            ${op.estaRetrasado ? `<br><small class="text-danger">SLA: ${op.slaHoras}h</small>` : ''}
-                        </td>
+                        <td><div class="small text-muted">${op.fechaSalida}</div><div class="small fw-bold">${op.dias}d ${op.horas % 24}h</div></td>
+                        <td><span class="badge bg-secondary mb-1">${op.estatus}</span>${op.guiaMrw ? `<br><small class="text-muted">MRW: ${op.guiaMrw}</small>` : ''}</td>
+                        <td><span class="badge ${badgeAlerta}"><i class="bi ${iconoAlerta}"></i> ${textoAlerta}</span>${op.estaRetrasado ? `<br><small class="text-danger">SLA: ${op.slaHoras}h</small>` : ''}</td>
                     </tr>
                 `;
             });
@@ -325,7 +284,6 @@
     });
   }
 
-  // --- PESTAÑA 3: CUADRO DE RELACIÓN ---
   function cargarRelacion() {
     const filtros = obtenerFiltros();
     const contenedor = document.getElementById('contenedorRelacion');
@@ -336,39 +294,16 @@
     .then(resp => {
         if (resp.exito) {
             let estados = Object.keys(resp.datos);
-            
-            if (estados.length === 0) {
-                contenedor.innerHTML = '<div class="col-12 text-center py-4 text-muted">No hay movimientos en este rango de fechas.</div>';
-                return;
-            }
+            if (estados.length === 0) { contenedor.innerHTML = '<div class="col-12 text-center py-4 text-muted">No hay movimientos en este rango de fechas.</div>'; return; }
 
             estados.sort((a, b) => {
-                if (a === 'GRAN CARACAS') return -1;
-                if (b === 'GRAN CARACAS') return 1;
-                if (a === 'ALTOS MIRANDINOS') return -1;
-                if (b === 'ALTOS MIRANDINOS') return 1;
+                if (a === 'GRAN CARACAS') return -1; if (b === 'GRAN CARACAS') return 1;
+                if (a === 'ALTOS MIRANDINOS') return -1; if (b === 'ALTOS MIRANDINOS') return 1;
                 return a.localeCompare(b);
             });
 
-            let htmlEnv = `
-                <div class="col-md-6 mb-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-primary text-white py-2 fw-bold">📤 MASTERS ENVIADOS (Por Origen)</div>
-                        <div class="card-body p-0">
-                            <table class="table table-sm table-hover mb-0">
-                                <thead class="table-light"><tr><th>Origen</th><th>Detalle de Envíos</th></tr></thead>
-                                <tbody>
-            `;
-            
-            let htmlRec = `
-                <div class="col-md-6 mb-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-success text-white py-2 fw-bold">📥 MASTERS RECIBIDOS (Por Destino)</div>
-                        <div class="card-body p-0">
-                            <table class="table table-sm table-hover mb-0">
-                                <thead class="table-light"><tr><th>Destino</th><th>Detalle de Recepciones</th></tr></thead>
-                                <tbody>
-            `;
+            let htmlEnv = `<div class="col-md-6 mb-3"><div class="card shadow-sm h-100"><div class="card-header bg-primary text-white py-2 fw-bold">📤 MASTERS ENVIADOS (Por Origen)</div><div class="card-body p-0"><table class="table table-sm table-hover mb-0"><thead class="table-light"><tr><th>Origen</th><th>Detalle de Envíos</th></tr></thead><tbody>`;
+            let htmlRec = `<div class="col-md-6 mb-3"><div class="card shadow-sm h-100"><div class="card-header bg-success text-white py-2 fw-bold">📥 MASTERS RECIBIDOS (Por Destino)</div><div class="card-body p-0"><table class="table table-sm table-hover mb-0"><thead class="table-light"><tr><th>Destino</th><th>Detalle de Recepciones</th></tr></thead><tbody>`;
 
             estados.forEach(estado => {
                 const data = resp.datos[estado];
@@ -377,38 +312,26 @@
 
                 if (enviadosArray.length > 0 || estado === 'GRAN CARACAS' || estado === 'ALTOS MIRANDINOS') {
                     htmlEnv += `<tr><td class="fw-bold align-middle">${estado}</td><td>`;
-                    if (enviadosArray.length > 0) {
-                        enviadosArray.forEach(([dest, cant]) => {
-                            htmlEnv += `<span class="badge-vector mb-1 d-inline-block">${cant} ➔ ${dest}</span> `;
-                        });
-                    } else {
-                        htmlEnv += '<span class="text-muted small">Sin envíos</span>';
-                    }
+                    if (enviadosArray.length > 0) { enviadosArray.forEach(([dest, cant]) => { htmlEnv += `<span class="badge-vector mb-1 d-inline-block">${cant} ➔ ${dest}</span> `; }); } 
+                    else { htmlEnv += '<span class="text-muted small">Sin envíos</span>'; }
                     htmlEnv += `</td></tr>`;
                 }
 
                 if (recibidosArray.length > 0 || estado === 'GRAN CARACAS' || estado === 'ALTOS MIRANDINOS') {
                     htmlRec += `<tr><td class="fw-bold align-middle">${estado}</td><td>`;
-                    if (recibidosArray.length > 0) {
-                        recibidosArray.forEach(([orig, cant]) => {
-                            htmlRec += `<span class="badge-vector mb-1 d-inline-block">${cant} ← ${orig}</span> `;
-                        });
-                    } else {
-                        htmlRec += '<span class="text-muted small">Sin recepciones</span>';
-                    }
+                    if (recibidosArray.length > 0) { recibidosArray.forEach(([orig, cant]) => { htmlRec += `<span class="badge-vector mb-1 d-inline-block">${cant} ← ${orig}</span> `; }); } 
+                    else { htmlRec += '<span class="text-muted small">Sin recepciones</span>'; }
                     htmlRec += `</td></tr>`;
                 }
             });
 
             htmlEnv += `</tbody><tfoot><tr class="fila-total"><td>TOTAL</td><td>${resp.totalEnv} Masters Enviados</td></tr></tfoot></table></div></div></div>`;
             htmlRec += `</tbody><tfoot><tr class="fila-total"><td>TOTAL</td><td>${resp.totalRec} Masters Recibidos</td></tr></tfoot></table></div></div></div>`;
-
             contenedor.innerHTML = htmlEnv + htmlRec;
         }
     });
   }
 
-  // --- FUNCIONES DE CONFIGURACION Y REPORTES ---
   function abrirConfiguracion() {
     Swal.fire({ title: 'Cargando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerConfiguracion' }) })
