@@ -176,17 +176,13 @@ function cambiarEstado() {
   document.getElementById('boxOpt').classList.add('oculto');
   document.getElementById('boxCredencialesOPT').classList.add('oculto');
   
-  // Resetear el botón por defecto
-  btn.innerText = 'Ingresar al Sistema';
+  btn.innerText = 'Ingresar al Sistema'; // Reset por defecto
 
   if (!estado) return;
 
   if (rol === 'GERENCIA_ESTADO') {
-    // Mostramos el panel de registro
     document.getElementById('boxCredencialesNormales').classList.remove('oculto');
-    
-    // 🔥 AQUÍ CAMBIAMOS EL TEXTO DEL BOTÓN
-    btn.innerText = 'Registrarse e Ingresar';
+    btn.innerText = 'Registrarse e Ingresar'; // 🔥 EL BOTÓN CAMBIA AQUÍ
   }
   
   if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
