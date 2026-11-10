@@ -170,19 +170,18 @@ function cambiarRol() {
 function cambiarEstado() {
   const estado = document.getElementById('selEstado').value;
   const rol = document.getElementById('selRol').value;
-  const btn = document.getElementById('btnIngresar');
   
   document.getElementById('boxCredencialesNormales').classList.add('oculto');
   document.getElementById('boxOpt').classList.add('oculto');
   document.getElementById('boxCredencialesOPT').classList.add('oculto');
-  
-  btn.innerText = 'Ingresar al Sistema'; // Reset por defecto
 
   if (!estado) return;
 
   if (rol === 'GERENCIA_ESTADO') {
+    // Mostramos el panel de registro
     document.getElementById('boxCredencialesNormales').classList.remove('oculto');
-    btn.innerText = 'Registrarse e Ingresar'; // 🔥 EL BOTÓN CAMBIA AQUÍ
+    // El botón se mantiene igual, el backend decide si registra o solo valida
+    document.getElementById('btnIngresar').innerText = 'Ingresar al Sistema';
   }
   
   if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
