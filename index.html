@@ -73,15 +73,24 @@
         </select>
       </div>
 
-      <!-- Credenciales SOLO CORREO Y CLAVE (Ya no hay "Usuario") -->
-      <div id="boxCredencialesNormales" class="mb-3 oculto">
-        <div class="mb-3">
-          <label class="form-label">Correo Electrónico</label>
-          <input id="correoNormal" type="email" class="form-control" placeholder="correo@ipostel.gob.ve">
+      <!-- 6. PANEL DE REGISTRO (Para Gerente, Coordinador, etc.) -->
+      <div id="boxCredencialesNormales" class="mb-3 oculto p-3 bg-light rounded border">
+        <h6 class="text-primary mb-3 fw-bold">Datos de Registro</h6>
+        <div class="mb-2">
+          <label class="form-label small mb-1">Correo Electrónico</label>
+          <input id="registroCorreo" type="email" class="form-control form-control-sm" placeholder="correo@ipostel.gob.ve">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small mb-1">Nombres y Apellidos</label>
+          <input id="registroNombre" type="text" class="form-control form-control-sm" placeholder="Ej: Juan Pérez">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small mb-1">Cédula de Identidad</label>
+          <input id="registroCedula" type="text" class="form-control form-control-sm" placeholder="Ej: V-12345678">
         </div>
         <div class="mb-0">
-          <label class="form-label">Clave</label>
-          <input id="claveNormal" type="password" class="form-control" placeholder="••••">
+          <label class="form-label small mb-1">Clave de 4 dígitos</label>
+          <input id="registroClave" type="password" maxlength="4" inputmode="numeric" class="form-control form-control-sm" placeholder="••••">
         </div>
       </div>
 
