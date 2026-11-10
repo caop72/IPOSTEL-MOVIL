@@ -246,58 +246,82 @@
       </div>
 
 <script>
-// URL DE TU GOOGLE APPS SCRIPT (IPOSTEL)
-const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
+    const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
 
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('btnLogin');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Validando...';
-
-    const usuario = document.getElementById('usuario').value;
-    const clave = document.getElementById('clave').value;
-
-    try {
-        const response = await fetch(URL_APPS_SCRIPT, {
-            method: 'POST',
-            body: new URLSearchParams({ accion: 'login', usuario: usuario, clave: clave })
-        });
-        const data = await response.json();
-
-        if (data.exito) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Bienvenido',
-                text: `Ingresando como: ${data.rol}`,
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                const rol = data.rol;
-                
-                // GUARDAR SESIÓN (corregido)
-                sessionStorage.setItem('usuario', usuario);
-                sessionStorage.setItem('rol', rol);
-
-                if (rol.includes('Encaminamiento')) window.location.href = 'encaminamiento.html';
-                else if (rol.includes('Seguimiento')) window.location.href = 'seguimiento.html';
-                else if (rol.includes('CNC')) window.location.href = 'coordinador_cnc.html';
-                else if (rol.includes('Estado')) window.location.href = 'estados.html';
-                else if (rol.includes('Observatorio') || rol.includes('Presidencia') || rol.includes('Despacho') || rol.includes('Operaciones')) window.location.href = 'observatorio.html';
-                else if (rol.includes('OPT')) window.location.href = 'portal_opt.html';
-                else window.location.href = 'observatorio.html'; 
+    // 1. CARGAR LAS OPTs AL INICIAR
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            const response = await fetch(URL_APPS_SCRIPT, {
+                method: 'POST',
+                body: new URLSearchParams({ accion: 'obtenerEstadosOPT' })
             });
-        } else {
-            Swal.fire('Acceso Denegado', data.mensaje, 'error');
+            const data = await response.json();
+            
+            if (data.exito) {
+                const grupoOPTs = document.getElementById('grupoOPTs');
+                // Recorremos los estados (que en realidad son las OPTs) y las agregamos
+                data.estados.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.textContent = opt;
+                    grupoOPTs.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error("Error cargando OPTs:", error);
+        }
+    });
+
+    // 2. VALIDAR LOGIN
+    document.getElementById('formGeneral').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnLoginGeneral');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Validando...';
+
+        const usuario = document.getElementById('selectUsuario').value;
+        const clave = document.getElementById('clave').value;
+
+        try {
+            // Enviamos el usuario (rol) y la clave al backend
+            const response = await fetch(URL_APPS_SCRIPT, {
+                method: 'POST',
+                body: new URLSearchParams({ accion: 'login', usuario: usuario, clave: clave })
+            });
+            const data = await response.json();
+
+            if (data.exito) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Bienvenido',
+                    text: `Ingresando como: ${data.rol}`,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    sessionStorage.setItem('usuario', usuario);
+                    sessionStorage.setItem('rol', data.rol);
+
+                    const rol = String(data.rol).toLowerCase();
+                    
+                    // Redirección según el rol
+                    if (rol.includes('admin') || rol.includes('encaminamiento')) window.location.href = 'encaminamiento.html';
+                    else if (rol.includes('seguimiento')) window.location.href = 'seguimiento.html';
+                    else if (rol.includes('cnc')) window.location.href = 'coordinador_cnc.html';
+                    else if (rol.includes('observatorio') || rol.includes('presidencia') || rol.includes('despacho')) window.location.href = 'observatorio.html';
+                    else if (rol.includes('opt')) window.location.href = 'portal_opt.html';
+                    else window.location.href = 'observatorio.html'; 
+                });
+            } else {
+                Swal.fire('Acceso Denegado', data.mensaje, 'error');
+                btn.disabled = false;
+                btn.innerHTML = 'Ingresar al Sistema';
+            }
+        } catch (error) {
+            Swal.fire('Error de conexión', 'Verifica tu conexión a internet o el Apps Script.', 'error');
             btn.disabled = false;
             btn.innerHTML = 'Ingresar al Sistema';
         }
-    } catch (error) {
-        Swal.fire('Error de conexión', 'Verifica tu conexión a internet o el Apps Script.', 'error');
-        btn.disabled = false;
-        btn.innerHTML = 'Ingresar al Sistema';
-    }
-});
+    });
 </script>
 </body>
 </html>
