@@ -1,327 +1,374 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IPOSTEL - Informe de Movilidad</title>
-  
-  <!-- ETIQUETAS OPEN GRAPH -->
-  <meta property="og:title" content="IPOSTEL - Informe de Movilidad">
-  <meta property="og:description" content="Sistema de Control y Tracking de Despachos Masters.">
-  <meta property="og:image" content="https://caop72.github.io/IPOSTEL-MOVIL/portada_previa.jpg">
-  <meta property="og:url" content="https://caop72.github.io/IPOSTEL-MOVIL/">
-  <meta property="og:type" content="website">
-  
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
-  <style>
-    /* ========================================================
-       ESTILOS DE LA PORTADA (SIN IMAGEN DE FONDO, SOLO GRADIENTE)
-       ======================================================== */
-    #pantalla-portada {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(rgba(13, 27, 94, 0.9), rgba(5, 15, 40, 1));
-      background-color: #0d1b5e; 
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      transition: opacity 0.6s ease, visibility 0.6s ease;
-    }
-
-    .titulo-portada {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #00d2ff; 
-      font-size: 1.2rem;
-      font-weight: 600;
-      letter-spacing: 5px;
-      text-transform: uppercase;
-      margin-bottom: -5px;
-      z-index: 10;
-      text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
-    }
-
-    .subtitulo-portada {
-      font-family: 'Arial Black', Impact, sans-serif;
-      color: #ffffff;
-      font-size: 3.5rem;
-      font-weight: 900;
-      margin-bottom: 20px;
-      z-index: 10;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      background: linear-gradient(to right, #ffffff 20%, #e0e0e0 50%, #ffffff 80%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-size: 200% auto;
-      animation: shine 3s linear infinite;
-      text-shadow: 0 4px 15px rgba(0,0,0,0.6);
-    }
-
-    @keyframes shine { to { background-position: 200% center; } }
-
-    .card-container {
-      width: 300px;
-      height: 300px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      z-index: 10;
-      filter: drop-shadow(0 0 25px rgba(0, 210, 255, 0.3));
-      margin-bottom: 20px;
-    }
-
-    svg { width: 100%; height: 100%; overflow: visible; }
-
-    .sphere-light-band { animation: continuousBandSweep 4.5s ease-in-out infinite; }
-    @keyframes continuousBandSweep {
-        0% { transform: translateX(-60px) translateY(30px) rotate(-15deg); opacity: 0; }
-        20% { opacity: 0.55; }
-        50% { transform: translateX(10px) translateY(-5px) rotate(-15deg); opacity: 0.6; }
-        70% { transform: translateX(45px) translateY(-25px) rotate(-15deg); opacity: 0; }
-        100% { transform: translateX(-60px) translateY(30px) rotate(-15deg); opacity: 0; }
-    }
-    .yellow-halo { animation: pulseHalo 2.5s ease-in-out infinite alternate; transform-origin: 194px 145px; }
-    @keyframes pulseHalo {
-        0% { opacity: 0.85; filter: drop-shadow(0 0 2px rgba(255, 214, 0, 0.4)); }
-        100% { opacity: 1; filter: drop-shadow(0 0 10px rgba(255, 214, 0, 0.8)); }
-    }
-    .orbit-shine-inner { animation: orbitLightSweep 2.8s linear infinite; }
-    .delay-1 { animation-delay: 0s; } .delay-2 { animation-delay: 0.4s; } .delay-3 { animation-delay: 0.8s; }
-    @keyframes orbitLightSweep {
-        0% { transform: translateX(-140px) rotate(-13deg); opacity: 0; }
-        20% { opacity: 1; } 80% { opacity: 1; }
-        100% { transform: translateX(140px) rotate(-13deg); opacity: 0; }
-    }
-    .star-twinkle { animation: starFlash 2s ease-in-out infinite alternate; }
-    .st-1 { animation-delay: 0.0s; } .st-2 { animation-delay: 0.3s; } .st-3 { animation-delay: 0.6s; } .st-4 { animation-delay: 0.9s; }
-    .st-5 { animation-delay: 0.2s; } .st-6 { animation-delay: 0.5s; } .st-7 { animation-delay: 0.8s; } .st-8 { animation-delay: 1.1s; }
-    @keyframes starFlash {
-        0% { opacity: 0.4; r: 0.8; }
-        100% { opacity: 1; r: 1.4; filter: drop-shadow(0 0 3px #ffffff); }
-    }
-    .text-sheen { animation: sheenMove 4s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
-    @keyframes sheenMove {
-        0% { transform: translateX(-220px); }
-        35% { transform: translateX(220px); }
-        100% { transform: translateX(220px); }
-    }
-
-    .btn-ingresar-portada {
-      background: transparent;
-      border: 2px solid #00d2ff;
-      border-radius: 50px;
-      padding: 12px 45px;
-      font-size: 1rem;
-      font-weight: bold;
-      text-transform: uppercase;
-      transition: all 0.3s ease;
-      color: #ffffff;
-      text-decoration: none;
-      box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
-      cursor: pointer;
-      z-index: 10;
-      letter-spacing: 2px;
-    }
-    .btn-ingresar-portada:hover {
-      background: #00d2ff;
-      color: #0d1b5e;
-      box-shadow: 0 0 25px rgba(0, 210, 255, 0.8);
-      transform: scale(1.05);
-    }
-
-    /* ========================================================
-       ESTILOS DEL LOGIN
-       ======================================================== */
-    body { 
-      background: linear-gradient(135deg, #0d1b5e 0%, #1e3a8a 100%); 
-      min-height: 100vh; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      padding: 20px; 
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .login-card { 
-        width: 100%; max-width: 420px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
-        background-color: #fff; overflow: hidden; position: relative;
-    }
-    .flag-bar { height: 5px; background: linear-gradient(to right, #FFCC00 33%, #0033A0 33%, #0033A0 66%, #EF3340 66%); }
-    
-    .form-control { border-radius: 10px; padding: 12px 15px; border: 1px solid #ced4da; background: #f8f9fa; }
-    .form-control:focus { box-shadow: 0 0 0 0.25rem rgba(13, 27, 94, 0.25); border-color: #0d1b5e; }
-    .btn-primary { background-color: #0d1b5e; border: none; border-radius: 10px; padding: 12px; font-weight: bold; letter-spacing: 1px; transition: all 0.3s ease; }
-    .btn-primary:hover { background-color: #1e3a8a; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(13, 27, 94, 0.4); }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPOSTEL Móvil — Acceso</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  :root { --azul:#0d1b5e; --cyan:#00d2ff; }
+  body { background: linear-gradient(135deg, var(--azul) 0%, #1c2f8a 100%); min-height:100vh; color:#fff; font-family:'Segoe UI',sans-serif; }
+  .card-ipostel { background:#fff; color:#222; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .titulo { color: var(--azul); font-weight:700; }
+  .btn-ipostel { background: var(--azul); color:#fff; font-weight:600; }
+  .btn-ipostel:hover { background:#081447; color: var(--cyan); }
+  .rol-card { cursor:pointer; border:2px solid #e3e6f0; border-radius:12px; transition:.2s; padding:14px; text-align:center; background:#f8f9ff; }
+  .rol-card:hover { border-color: var(--cyan); transform:translateY(-2px); }
+  .rol-card.activo { border-color: var(--azul); background:#e7ecff; }
+  .rol-card i { font-size:1.6rem; color: var(--azul); }
+  .oculto { display:none !important; }
+  .badge-paso { background: var(--cyan); color:#002b40; font-weight:700; }
+</style>
 </head>
-<body>
-
-  <!-- CAPA 1: LA PORTADA ANIMADA -->
-  <div id="pantalla-portada">
-    <div class="titulo-portada">Observatorio Estadístico</div>
-    <div class="subtitulo-portada">Movilidad</div>
-    <div class="card-container">
-        <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <mask id="crescentMask"><circle cx="194" cy="145" r="74" fill="#ffffff" /><circle cx="203" cy="145" r="74" fill="#000000" /></mask>
-                <mask id="orbitMask1"><ellipse cx="200" cy="142" rx="90" ry="24" fill="#ffffff" transform="rotate(-13 200 142)" /><ellipse cx="200" cy="138" rx="90" ry="24" fill="#000000" transform="rotate(-13 200 138)" /></mask>
-                <mask id="orbitMask2"><ellipse cx="200" cy="157" rx="90" ry="24" fill="#ffffff" transform="rotate(-13 200 157)" /><ellipse cx="200" cy="153" rx="90" ry="24" fill="#000000" transform="rotate(-13 200 153)" /></mask>
-                <mask id="orbitMask3"><ellipse cx="200" cy="172" rx="90" ry="24" fill="#ffffff" transform="rotate(-13 200 172)" /><ellipse cx="200" cy="168" rx="90" ry="24" fill="#000000" transform="rotate(-13 200 168)" /></mask>
-                <clipPath id="sphereClip"><circle cx="200" cy="145" r="65" /></clipPath>
-                <radialGradient id="sphereGrad" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#ff4b72" /><stop offset="40%" stop-color="#ab1c3e" /><stop offset="85%" stop-color="#58081c" /><stop offset="100%" stop-color="#30000c" /></radialGradient>
-                <linearGradient id="softBandGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0" /><stop offset="30%" stop-color="#ffffff" stop-opacity="0.4" /><stop offset="50%" stop-color="#ffffff" stop-opacity="0.75" /><stop offset="70%" stop-color="#ffffff" stop-opacity="0.4" /><stop offset="100%" stop-color="#ffffff" stop-opacity="0" /></linearGradient>
-                <linearGradient id="orbitLightGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0" /><stop offset="30%" stop-color="#ffffff" stop-opacity="0.8" /><stop offset="50%" stop-color="#ffffff" stop-opacity="1" /><stop offset="70%" stop-color="#ffffff" stop-opacity="0.8" /><stop offset="100%" stop-color="#ffffff" stop-opacity="0" /></linearGradient>
-                <linearGradient id="tricolorGradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffd600" /><stop offset="28%" stop-color="#ffd600" /><stop offset="35%" stop-color="#001871" /><stop offset="65%" stop-color="#001871" /><stop offset="72%" stop-color="#e30613" /><stop offset="100%" stop-color="#e30613" /></linearGradient>
-                <linearGradient id="sheenGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0" /><stop offset="50%" stop-color="#ffffff" stop-opacity="0.8" /><stop offset="100%" stop-color="#ffffff" stop-opacity="0" /></linearGradient>
-                <mask id="textAndBarMask">
-                    <rect x="85" y="308" width="242" height="12" rx="2" fill="#ffffff" />
-                    <polygon points="108,292 124,292 116,320 100,320" fill="#ffffff" />
-                    <text x="200" y="295" text-anchor="middle" fill="#ffffff" font-family="'Arial Black', 'Impact', sans-serif" font-size="68" font-weight="900" font-style="italic" letter-spacing="-2">Ipostel</text>
-                </mask>
-            </defs>
-            <g>
-                <circle class="yellow-halo" cx="194" cy="145" r="74" fill="#ffd600" mask="url(#crescentMask)" />
-                <g clip-path="url(#sphereClip)">
-                    <circle cx="200" cy="145" r="65" fill="url(#sphereGrad)" />
-                    <rect class="sphere-light-band" x="130" y="130" width="140" height="32" rx="16" fill="url(#softBandGrad)" filter="blur(10px)" />
-                </g>
-                <g mask="url(#orbitMask1)"><rect x="90" y="90" width="220" height="120" fill="#c2c9d1" /><rect class="orbit-shine-inner delay-1" x="130" y="80" width="70" height="140" fill="url(#orbitLightGrad)" filter="drop-shadow(0 0 5px #ffffff)" /></g>
-                <g mask="url(#orbitMask2)"><rect x="90" y="105" width="220" height="120" fill="#c2c9d1" /><rect class="orbit-shine-inner delay-2" x="130" y="95" width="70" height="140" fill="url(#orbitLightGrad)" filter="drop-shadow(0 0 5px #ffffff)" /></g>
-                <g mask="url(#orbitMask3)"><rect x="90" y="120" width="220" height="120" fill="#c2c9d1" /><rect class="orbit-shine-inner delay-3" x="130" y="110" width="70" height="140" fill="url(#orbitLightGrad)" filter="drop-shadow(0 0 5px #ffffff)" /></g>
-            </g>
-            <g>
-                <rect x="85" y="308" width="242" height="12" rx="2" fill="url(#tricolorGradient)" />
-                <polygon points="112,292 128,292 124,320 108,320" fill="#006865" />
-                <polygon points="116,292 124,292 120,320 112,320" fill="#ffffff" />
-                <g fill="#ffffff" transform="translate(206, 314)">
-                    <circle class="star-twinkle st-1" cx="-32" cy="1.2" r="1.0" /><circle class="star-twinkle st-2" cx="-23" cy="-0.8" r="1.0" /><circle class="star-twinkle st-3" cx="-14" cy="-2.2" r="1.0" /><circle class="star-twinkle st-4" cx="-5" cy="-3.0" r="1.0" />
-                    <circle class="star-twinkle st-5" cx="4" cy="-3.0" r="1.0" /><circle class="star-twinkle st-6" cx="13" cy="-2.2" r="1.0" /><circle class="star-twinkle st-7" cx="22" cy="-0.8" r="1.0" /><circle class="star-twinkle st-8" cx="31" cy="1.2" r="1.0" />
-                </g>
-                <text x="200" y="295" text-anchor="middle" fill="#ffffff" font-family="'Arial Black', 'Impact', sans-serif" font-size="68" font-weight="900" font-style="italic" letter-spacing="-2">Ipostel</text>
-                <g mask="url(#textAndBarMask)"><rect class="text-sheen" x="80" y="220" width="50" height="130" fill="url(#sheenGrad)" transform="skewX(-20)" /></g>
-                <text x="85" y="338" fill="#ffffff" font-family="'Arial Black', sans-serif" font-size="14.5" font-weight="900" textLength="242" lengthAdjust="spacingAndGlyphs">Revolucionando el correo</text>
-            </g>
-        </svg>
+<body class="d-flex align-items-center py-4">
+<div class="container" style="max-width: 720px;">
+  <div class="card card-ipostel p-4">
+    <div class="text-center mb-3">
+      <h3 class="titulo mb-0">IPOSTEL Móvil</h3>
+      <small class="text-muted">Sistema de control y tracking vectorial</small>
     </div>
 
-    <button class="btn-ingresar-portada" onclick="document.getElementById('pantalla-portada').style.opacity = '0'; setTimeout(() => document.getElementById('pantalla-portada').style.display = 'none', 600);">
-       INGRESAR AL SISTEMA
-    </button>
-  </div>
-
-  <!-- CAPA 2: EL LOGIN -->
-      <form id="formGeneral">
-        <div class="mb-3">
-          <label class="form-label fw-bold">Seleccione su Rol / Usuario</label>
-          <select class="form-select" id="selectUsuario" required>
-            <option value="">Seleccione una opción...</option>
-            <!-- Roles Administrativos -->
-            <option value="admin">Administrador General</option>
-            <option value="mariana">Encaminamiento (Mariana)</option>
-            <option value="alfredo">Seguimiento (Alfredo)</option>
-            <option value="jose">Coordinador CNC (José)</option>
-            <option value="observatorio">Observatorio</option>
-            <!-- Las OPTs se cargarán dinámicamente aquí -->
-            <optgroup label="Oficinas Postales (OPT)" id="grupoOPTs">
-              <!-- El JavaScript las insertará -->
-            </optgroup>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Clave</label>
-          <input type="password" class="form-control" id="clave" required placeholder="Ingrese su clave">
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100" id="btnLoginGeneral">Ingresar al Sistema</button>
-      </form>
-
-      <div class="text-center mt-3">
-          <small class="text-muted">&copy; 2024 IPOSTEL - Todos los derechos reservados.</small>
+    <!-- PASO 1: CREDENCIALES BASE -->
+    <div id="paso1">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge badge-paso">Paso 1 de 4</span>
+        <small class="text-muted">Identificación</small>
       </div>
+      <div class="mb-2">
+        <label class="form-label">Usuario</label>
+        <input id="usuario" class="form-control" placeholder="Ej: mariana / Presidencia">
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Correo (si aplica)</label>
+        <input id="correo" type="email" class="form-control" placeholder="correo@ipostel.gob.ve">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Clave</label>
+        <input id="clave" type="password" class="form-control" placeholder="••••">
+      </div>
+      <button class="btn btn-ipostel w-100" onclick="irPasoRoles()">Continuar ➜</button>
+      <div class="text-center mt-2">
+        <a href="#" onclick="recuperar()" class="small">¿Olvidó su clave?</a>
+      </div>
+    </div>
+
+    <!-- PASO 2: ROL -->
+    <div id="paso2" class="oculto">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge badge-paso">Paso 2 de 4</span>
+        <small class="text-muted">Seleccione su rol</small>
+      </div>
+      <div class="row g-2" id="gridRoles"></div>
+    </div>
+
+    <!-- PASO 3: SUB-SELECTOR -->
+    <div id="paso3" class="oculto">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge badge-paso">Paso 3 de 4</span>
+        <small class="text-muted" id="tituloPaso3">Seleccione opción</small>
+      </div>
+      <div id="contenidoPaso3"></div>
+      <button class="btn btn-outline-secondary w-100 mt-2" onclick="volverRoles()">⬅ Volver</button>
+    </div>
+
+    <!-- PASO 4: CLAVE EXTRA (OPT) -->
+    <div id="paso4" class="oculto">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge badge-paso">Paso 4 de 4</span>
+        <small class="text-muted">Credenciales de la OPT</small>
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Correo</label>
+        <input id="correoOPT" type="email" class="form-control" placeholder="correo@ipostel.gob.ve">
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Clave</label>
+        <input id="claveOPT" type="password" class="form-control" placeholder="••••">
+      </div>
+      <button class="btn btn-ipostel w-100" onclick="entrarOPT()">Ingresar ➜</button>
+      <button class="btn btn-outline-secondary w-100 mt-2" onclick="volverRoles()">⬅ Volver</button>
+    </div>
+
+    <!-- PASO CAMBIO DE CLAVE -->
+    <div id="pasoCambio" class="oculto">
+      <div class="mb-2"><span class="badge badge-paso">Cambio obligatorio</span></div>
+      <p class="text-danger small mb-2">Debe establecer una clave de 4 dígitos para continuar.</p>
+      <div class="mb-2">
+        <label class="form-label">Nueva clave (4 dígitos)</label>
+        <input id="nuevaClave" type="password" maxlength="4" inputmode="numeric" class="form-control" placeholder="••••">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Confirmar clave</label>
+        <input id="confirmarClave" type="password" maxlength="4" inputmode="numeric" class="form-control" placeholder="••••">
+      </div>
+      <button class="btn btn-ipostel w-100" onclick="guardarClave()">Guardar y continuar ➜</button>
+    </div>
+
+  </div>
+</div>
 
 <script>
-    const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
+/* ⚠️ Reemplaza con tu URL /exec desplegada */
+const API_URL = 'https://script.google.com/macros/s/TU_DEPLOY_ID/exec';
 
-    // 1. CARGAR LAS OPTs AL INICIAR
-    document.addEventListener('DOMContentLoaded', async function() {
-        try {
-            const response = await fetch(URL_APPS_SCRIPT, {
-                method: 'POST',
-                body: new URLSearchParams({ accion: 'obtenerEstadosOPT' })
-            });
-            const data = await response.json();
-            
-            if (data.exito) {
-                const grupoOPTs = document.getElementById('grupoOPTs');
-                // Recorremos los estados (que en realidad son las OPTs) y las agregamos
-                data.estados.forEach(opt => {
-                    const option = document.createElement('option');
-                    option.value = opt;
-                    option.textContent = opt;
-                    grupoOPTs.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error("Error cargando OPTs:", error);
-        }
+let estadoSel = null;
+let optSel = null;
+let rolSel = null;
+let subRolSel = null;
+let usuarioPendiente = null;
+
+const ROLES = [
+  { id:'PRESIDENCIA',      label:'Presidencia',          icon:'★' },
+  { id:'DESPACHO',         label:'Despacho',             icon:'✎' },
+  { id:'OBSERVATORIO',     label:'Observatorio',         icon:'👁' },
+  { id:'DIRECCION',        label:'Dirección',            icon:'⌂' },
+  { id:'GERENCIA_ESTADO',  label:'Gerencia de Estado',   icon:'🗺' },
+  { id:'COORDINADOR',      label:'Coordinador',          icon:'⚙' },
+  { id:'JEFE_OPT',         label:'Jefe de OPT',          icon:'📮' },
+  { id:'ANALISTA_OPT',     label:'Analista de OPT',      icon:'🔎' }
+];
+
+function post(payload) {
+  return fetch(API_URL, {
+    method:'POST',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+  }).then(r => r.json());
+}
+
+/* ---------- Paso 1 → 2 ---------- */
+function irPasoRoles() {
+  const u = document.getElementById('usuario').value.trim();
+  const c = document.getElementById('clave').value.trim();
+  const m = document.getElementById('correo').value.trim();
+  if (!c) { Swal.fire('Falta','Ingrese la clave.','warning'); return; }
+  usuarioPendiente = { usuario: u, correo: m, clave: c };
+  renderRoles();
+  document.getElementById('paso1').classList.add('oculto');
+  document.getElementById('paso2').classList.remove('oculto');
+}
+
+/* ---------- Paso 2: render roles ---------- */
+function renderRoles() {
+  const grid = document.getElementById('gridRoles');
+  grid.innerHTML = '';
+  ROLES.forEach(r => {
+    const col = document.createElement('div');
+    col.className = 'col-6 col-md-4';
+    col.innerHTML = `
+      <div class="rol-card" data-rol="${r.id}">
+        <div>${r.icon}</div>
+        <div class="fw-semibold mt-1">${r.label}</div>
+      </div>`;
+    col.querySelector('.rol-card').onclick = () => elegirRol(r.id);
+    grid.appendChild(col);
+  });
+}
+
+/* ---------- Paso 3: condicional ---------- */
+function elegirRol(rol) {
+  rolSel = rol;
+  document.querySelectorAll('.rol-card').forEach(el => {
+    el.classList.toggle('activo', el.dataset.rol === rol);
+  });
+
+  const paso3 = document.getElementById('paso3');
+  const cont  = document.getElementById('contenidoPaso3');
+  const tit   = document.getElementById('tituloPaso3');
+  cont.innerHTML = '';
+  paso3.classList.remove('oculto');
+  document.getElementById('paso2').classList.add('oculto');
+
+  /* --- Roles de acceso directo --- */
+  if (['PRESIDENCIA','DESPACHO','OBSERVATORIO'].includes(rol)) {
+    entrarDirecto(rol);
+    return;
+  }
+
+  /* --- Dirección --- */
+  if (rol === 'DIRECCION') {
+    tit.innerText = 'Seleccione área';
+    cont.innerHTML = `
+      <div class="row g-2">
+        <div class="col-6"><div class="rol-card" data-sub="CNC">🖥<div class="fw-semibold mt-1">CNC</div><small>Micro-entrega y recepción</small></div></div>
+        <div class="col-6"><div class="rol-card" data-sub="OPERACIONES">📊<div class="fw-semibold mt-1">Operaciones</div><small>Auditoría general</small></div></div>
+      </div>`;
+    cont.querySelectorAll('[data-sub]').forEach(el => {
+      el.onclick = () => entrarSubRol(rol, el.dataset.sub);
     });
+    return;
+  }
 
-    // 2. VALIDAR LOGIN
-    document.getElementById('formGeneral').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btnLoginGeneral');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Validando...';
-
-        const usuario = document.getElementById('selectUsuario').value;
-        const clave = document.getElementById('clave').value;
-
-        try {
-            // Enviamos el usuario (rol) y la clave al backend
-            const response = await fetch(URL_APPS_SCRIPT, {
-                method: 'POST',
-                body: new URLSearchParams({ accion: 'login', usuario: usuario, clave: clave })
-            });
-            const data = await response.json();
-
-            if (data.exito) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Bienvenido',
-                    text: `Ingresando como: ${data.rol}`,
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(() => {
-                    sessionStorage.setItem('usuario', usuario);
-                    sessionStorage.setItem('rol', data.rol);
-
-                    const rol = String(data.rol).toLowerCase();
-                    
-                    // Redirección según el rol
-                    if (rol.includes('admin') || rol.includes('encaminamiento')) window.location.href = 'encaminamiento.html';
-                    else if (rol.includes('seguimiento')) window.location.href = 'seguimiento.html';
-                    else if (rol.includes('cnc')) window.location.href = 'coordinador_cnc.html';
-                    else if (rol.includes('observatorio') || rol.includes('presidencia') || rol.includes('despacho')) window.location.href = 'observatorio.html';
-                    else if (rol.includes('opt')) window.location.href = 'portal_opt.html';
-                    else window.location.href = 'observatorio.html'; 
-                });
-            } else {
-                Swal.fire('Acceso Denegado', data.mensaje, 'error');
-                btn.disabled = false;
-                btn.innerHTML = 'Ingresar al Sistema';
-            }
-        } catch (error) {
-            Swal.fire('Error de conexión', 'Verifica tu conexión a internet o el Apps Script.', 'error');
-            btn.disabled = false;
-            btn.innerHTML = 'Ingresar al Sistema';
-        }
+  /* --- Coordinador --- */
+  if (rol === 'COORDINADOR') {
+    tit.innerText = 'Seleccione coordinación';
+    cont.innerHTML = `
+      <div class="row g-2">
+        <div class="col-12"><div class="rol-card" data-sub="ENCAMINAMIENTO">🚚<div class="fw-semibold mt-1">Encaminamiento (Mariana)</div><small>Caracas → Estados</small></div></div>
+        <div class="col-12"><div class="rol-card" data-sub="ALIANZA">📦<div class="fw-semibold mt-1">Control del Aliado (Alfredo)</div><small>Seguimiento MRW</small></div></div>
+        <div class="col-12"><div class="rol-card" data-sub="CNC_MICRO">🔍<div class="fw-semibold mt-1">CNC-Micro Entrega (José)</div><small>Hasta el destinatario</small></div></div>
+      </div>`;
+    cont.querySelectorAll('[data-sub]').forEach(el => {
+      el.onclick = () => entrarSubRol(rol, el.dataset.sub);
     });
+    return;
+  }
+
+  /* --- Gerencia de Estado --- */
+  if (rol === 'GERENCIA_ESTADO') {
+    tit.innerText = 'Seleccione estado';
+    cargarEstados(cont, (est) => {
+      estadoSel = est;
+      entrarSubRol('GERENCIA_ESTADO', null, { estado: est });
+    });
+    return;
+  }
+
+  /* --- Jefe de OPT / Analista de OPT --- */
+  if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
+    tit.innerText = 'Seleccione estado';
+    cargarEstados(cont, (est) => {
+      estadoSel = est;
+      tit.innerText = 'Seleccione OPT';
+      cargarOPTs(cont, est, (opt) => {
+        optSel = opt;
+        document.getElementById('paso3').classList.add('oculto');
+        document.getElementById('paso4').classList.remove('oculto');
+      });
+    });
+    return;
+  }
+}
+
+/* --- Cargar estados --- */
+function cargarEstados(cont, cb) {
+  post({ accion:'obtenerEstados' }).then(r => {
+    if (!r.exito) { Swal.fire('Error', r.mensaje || 'No se pudo cargar estados', 'error'); return; }
+    cont.innerHTML = '<div class="row g-2" id="listaEstados"></div>';
+    const lista = document.getElementById('listaEstados');
+    r.estados.forEach(est => {
+      const col = document.createElement('div');
+      col.className = 'col-6';
+      col.innerHTML = `<div class="rol-card">${est}</div>`;
+      col.querySelector('.rol-card').onclick = () => cb(est);
+      lista.appendChild(col);
+    });
+  });
+}
+
+/* --- Cargar OPTs --- */
+function cargarOPTs(cont, estado, cb) {
+  post({ accion:'obtenerOPTsPorEstado', estado }).then(r => {
+    if (!r.exito) { Swal.fire('Error', r.mensaje || 'No se pudo cargar OPT', 'error'); return; }
+    if (!r.opts.length) { Swal.fire('Sin OPT','No hay OPT activas para ese estado.','info'); return; }
+    cont.innerHTML = '<div class="row g-2" id="listaOPTs"></div>';
+    const lista = document.getElementById('listaOPTs');
+    r.opts.forEach(o => {
+      const col = document.createElement('div');
+      col.className = 'col-6';
+      col.innerHTML = `<div class="rol-card"><div class="fw-semibold">${o.nombre}</div></div>`;
+      col.querySelector('.rol-card').onclick = () => cb(o.codigo);
+      lista.appendChild(col);
+    });
+  });
+}
+
+/* ---------- Entradas finales ---------- */
+function entrarDirecto(rol) {
+  const p = usuarioPendiente;
+  post({
+    accion:'loginArbol',
+    rol: rol,
+    usuario: p.usuario,
+    correo: p.correo,
+    clave: p.clave
+  }).then(procesarRespuestaLogin).catch(err => Swal.fire('Error', err.message, 'error'));
+}
+
+function entrarSubRol(rol, subRol, extra) {
+  const p = usuarioPendiente;
+  const payload = {
+    accion:'loginArbol',
+    rol: rol,
+    subRol: subRol || null,
+    usuario: p.usuario,
+    correo: p.correo,
+    clave: p.clave
+  };
+  if (extra && extra.estado) payload.estado = extra.estado;
+  post(payload).then(procesarRespuestaLogin).catch(err => Swal.fire('Error', err.message, 'error'));
+}
+
+function entrarOPT() {
+  const p = usuarioPendiente;
+  const correo = document.getElementById('correoOPT').value.trim();
+  const clave  = document.getElementById('claveOPT').value.trim();
+  if (!correo || !clave) { Swal.fire('Falta','Ingrese correo y clave.','warning'); return; }
+  post({
+    accion:'loginArbol',
+    rol: rolSel,
+    estado: estadoSel,
+    codigoOPT: optSel,
+    correo: correo,
+    clave: clave
+  }).then(procesarRespuestaLogin).catch(err => Swal.fire('Error', err.message, 'error'));
+}
+
+/* ---------- Procesar login ---------- */
+function procesarRespuestaLogin(r) {
+  if (!r.exito) { Swal.fire('Acceso denegado', r.mensaje || 'No autorizado', 'error'); return; }
+
+  if (r.requiereCambio) {
+    usuarioPendiente.loginResultado = r;
+    document.querySelectorAll('#paso1,#paso2,#paso3,#paso4').forEach(el => el.classList.add('oculto'));
+    document.getElementById('pasoCambio').classList.remove('oculto');
+    return;
+  }
+  redirigir(r);
+}
+
+function guardarClave() {
+  const n1 = document.getElementById('nuevaClave').value.trim();
+  const n2 = document.getElementById('confirmarClave').value.trim();
+  if (!/^\d{4}$/.test(n1)) { Swal.fire('Inválida','La clave debe tener 4 dígitos.','warning'); return; }
+  if (n1 !== n2) { Swal.fire('No coincide','Las claves no coinciden.','warning'); return; }
+
+  const r = usuarioPendiente.loginResultado || {};
+  const payload = { accion:'cambiarClave', nuevaClave: n1 };
+  if (r.codigoOPT) payload.codigoOPT = r.codigoOPT;
+  if (r.usuario)   payload.usuario = r.usuario;
+  if (usuarioPendiente.correo) payload.correo = usuarioPendiente.correo;
+
+  post(payload).then(resp => {
+    if (!resp.exito) { Swal.fire('Error', resp.mensaje, 'error'); return; }
+    Swal.fire('✅ Listo','Clave actualizada.','success').then(() => redirigir(r));
+  }).catch(err => Swal.fire('Error', err.message, 'error'));
+}
+
+function redirigir(r) {
+  const u = encodeURIComponent(r.usuario || usuarioPendiente.usuario || '');
+  const destino = r.pantalla + (r.pantalla.includes('?') ? '&' : '?') + 'u=' + u;
+  window.location.href = destino;
+}
+
+/* ---------- Recuperar clave ---------- */
+function recuperar() {
+  const correo = document.getElementById('correo').value.trim();
+  if (!correo) { Swal.fire('Correo requerido','Escriba su correo en el campo correspondiente.','info'); return; }
+  post({ accion:'recuperarClave', correo }).then(r => {
+    if (r.exito) Swal.fire('📧 Enviada', r.mensaje, 'success');
+    else Swal.fire('No encontrado', r.mensaje, 'warning');
+  });
+}
+
+/* ---------- Volver ---------- */
+function volverRoles() {
+  document.querySelectorAll('#paso2,#paso3,#paso4').forEach(el => el.classList.add('oculto'));
+  document.getElementById('paso2').classList.remove('oculto');
+  document.getElementById('paso3').innerHTML = '';
+  rolSel = null; subRolSel = null; estadoSel = null; optSel = null;
+}
 </script>
 </body>
 </html>
