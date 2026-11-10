@@ -296,15 +296,17 @@ function cambiarEstado() {
   document.getElementById('boxCredencialesNormales').classList.add('oculto');
   document.getElementById('boxOpt').classList.add('oculto');
   document.getElementById('boxCredencialesOPT').classList.add('oculto');
+  document.getElementById('btnIngresar').classList.add('oculto'); // Mantener oculto
 
   if (!estado) return;
 
   if (rol === 'GERENCIA_ESTADO') {
     document.getElementById('boxCredencialesNormales').classList.remove('oculto');
+    document.getElementById('btnIngresar').classList.remove('oculto'); // Aquí sí aparece (porque llenará el registro)
   }
   
   if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
-    cargarOPTs(estado);
+    cargarOPTs(estado); // Esto hará que aparezca el desplegable de OPT
   }
 }
 
