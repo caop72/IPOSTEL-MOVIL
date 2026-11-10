@@ -176,7 +176,7 @@
 </div>
 
 <script>
-// 🔥 TU URL REAL DE APPS SCRIPT INTEGRADA AQUÍ
+// URL DE APPS SCRIPT
 const API_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
 
 let loginResultado = null;
@@ -420,13 +420,41 @@ function guardarClave() {
 
   post(payload).then(resp => {
     if (!resp.exito) { Swal.fire('Error', resp.mensaje, 'error'); return; }
-    Swal.fire('✅ Clave actualizada', 'Ingresando al sistema...', 'success').then(() => redirigir(loginResultado));
+    
+    // 🔥 FIX: Forzamos la redirección guardando los datos de sesión manualmente
+    const u = encodeURIComponent(loginResultado.usuario || '');
+    
+    // Determinamos la pantalla destino
+    let pantalla = loginResultado.pantalla;
+    if (!pantalla) {
+      if (rol === 'PRESIDENCIA' || rol === 'DESPACHO' || rol === 'OBSERVATORIO') {
+        pantalla = 'observatorio.html';
+      } else if (rol === 'DIRECCION') {
+        pantalla = (document.getElementById('selSubRol').value === 'CNC') ? 'microentregas.html' : 'observatorio.html';
+      }
+    }
+    
+    // Guardamos la sesión para que el observatorio lo deje pasar
+    sessionStorage.setItem('ipostel_rol', rol);
+    sessionStorage.setItem('ipostel_usuario', loginResultado.usuario || '');
+    sessionStorage.setItem('usuario', loginResultado.usuario || '');
+    
+    Swal.fire('✅ Clave actualizada', 'Ingresando al sistema...', 'success').then(() => {
+      window.location.href = pantalla + (pantalla.includes('?') ? '&' : '?') + 'u=' + u + '&rol=' + encodeURIComponent(rol);
+    });
   });
 }
 
 function redirigir(r) {
   const u = encodeURIComponent(r.usuario || '');
-  const destino = r.pantalla + (r.pantalla.includes('?') ? '&' : '?') + 'u=' + u;
+  const rol = r.rol || '';
+  
+  // Guardamos en sesión
+  sessionStorage.setItem('ipostel_rol', rol);
+  sessionStorage.setItem('ipostel_usuario', r.usuario || '');
+  sessionStorage.setItem('usuario', r.usuario || '');
+
+  const destino = r.pantalla + (r.pantalla.includes('?') ? '&' : '?') + 'u=' + u + '&rol=' + encodeURIComponent(rol);
   window.location.href = destino;
 }
 
@@ -447,7 +475,7 @@ function recuperar() {
   });
 }
 
-// ⚠️ FUNCIÓN POST LIMPIA (SIN HEADERS PARA EVITAR CORS)
+// FUNCIÓN POST (SIN HEADERS PARA EVITAR CORS)
 function post(payload) {
   return fetch(API_URL, {
     method: 'POST',
