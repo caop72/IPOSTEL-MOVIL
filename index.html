@@ -135,13 +135,16 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hv
 
 function cambiarRol() {
   const rol = document.getElementById('selRol').value;
+  const btn = document.getElementById('btnIngresar');
   
-  // Ocultar todo
+  // Reseteamos el texto del botón cada vez que cambian el rol
+  btn.innerText = 'Ingresar al Sistema';
+
   document.getElementById('panelCredenciales').classList.add('oculto');
   document.getElementById('boxSoloClave').classList.add('oculto');
   document.getElementById('boxSubRol').classList.add('oculto');
   document.getElementById('boxCoord').classList.add('oculto');
-  document.getElementById('boxCredencialesNormales').classList.add('oculto'); // Ocultamos correo y clave
+  document.getElementById('boxCredencialesNormales').classList.add('oculto');
   document.getElementById('boxEstado').classList.add('oculto');
   document.getElementById('boxOpt').classList.add('oculto');
   document.getElementById('boxCredencialesOPT').classList.add('oculto');
@@ -149,18 +152,15 @@ function cambiarRol() {
   if (!rol) return;
   document.getElementById('panelCredenciales').classList.remove('oculto');
 
-  // Si es Gerencia de Estado, SOLO mostramos el desplegable de Estado
-  if (rol === 'GERENCIA_ESTADO') {
-    document.getElementById('boxEstado').classList.remove('oculto');
-    cargarEstados();
-  } 
-  // Los demás roles se mantienen igual
-  else if (['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO'].includes(rol)) {
+  if (['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO'].includes(rol)) {
     document.getElementById('boxSoloClave').classList.remove('oculto');
   } else if (rol === 'DIRECCION') {
     document.getElementById('boxSubRol').classList.remove('oculto');
   } else if (rol === 'COORDINADOR') {
     document.getElementById('boxCoord').classList.remove('oculto');
+  } else if (rol === 'GERENCIA_ESTADO') {
+    document.getElementById('boxEstado').classList.remove('oculto');
+    cargarEstados();
   } else if (rol === 'JEFE_OPT' || rol === 'ANALISTA_OPT') {
     document.getElementById('boxEstado').classList.remove('oculto');
     cargarEstados();
