@@ -8,9 +8,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #f4f6f9; }
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .navbar { background-color: #0d1b5e; }
         .navbar-brand, .nav-link { color: white !important; }
+        .oculto { display: none !important; }
     </style>
 </head>
 <body>
@@ -18,11 +19,14 @@
     <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#"><i class="bi bi-box-seam me-2"></i>IPOSTEL - Encaminamiento</a>
-            <div class="d-flex">
-                <button class="btn btn-warning btn-sm me-2 fw-bold text-dark" onclick="emitirReporte()">
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-light btn-sm" onclick="buscarPaqueteUniversal()">
+                    <i class="bi bi-search"></i> Buscar Paquete
+                </button>
+                <button class="btn btn-warning btn-sm fw-bold text-dark" onclick="emitirReporte()">
                     <i class="bi bi-file-earmark-pdf"></i> Emitir Reporte PDF
                 </button>
-                <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+                <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Cerrar Sesión</button>
             </div>
         </div>
     </nav>
@@ -38,11 +42,11 @@
                     <div class="card-body">
                         <form id="formMaster">
                             <div class="mb-3">
-                                <label class="form-label">Estado Origen</label>
+                                <label class="form-label small fw-bold">Estado Origen</label>
                                 <input type="text" class="form-control" id="origen" required placeholder="Ej: Caracas">
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Estado Destino</label>
+                                <label class="form-label small fw-bold">Estado Destino</label>
                                 <select class="form-select" id="destino" required>
                                     <option value="">Seleccione...</option>
                                     <option value="Aragua">Aragua</option>
@@ -59,22 +63,21 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="col-6">
-                                    <label class="form-label">Piezas</label>
+                                    <label class="form-label small fw-bold">Piezas</label>
                                     <input type="number" class="form-control" id="piezas" required min="1">
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label">Peso (Kg)</label>
+                                    <label class="form-label small fw-bold">Peso (Kg)</label>
                                     <input type="number" step="0.1" class="form-control" id="peso" required min="0.1">
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">N° Guía MRW</label>
+                                <label class="form-label small fw-bold">N° Guía MRW</label>
                                 <input type="text" class="form-control" id="guiaMrw" placeholder="Opcional">
                             </div>
                             <button type="submit" class="btn btn-primary w-100 fw-bold">Guardar Master</button>
                         </form>
                         
-                        <!-- BOTÓN DE CARGA MASIVA AGREGADO AQUÍ -->
                         <button type="button" class="btn btn-outline-primary w-100 mt-2 fw-bold" onclick="abrirCargaMasiva()">
                             <i class="bi bi-clipboard-data"></i> Carga Masiva (Pegar Texto)
                         </button>
@@ -113,75 +116,145 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
+        const sesion = { usuario: '', rol: '' };
 
-        document.addEventListener('DOMContentLoaded', cargarMasters);
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Validación de sesión específica para Coordinador de Encaminamiento
+            const urlParams = new URLSearchParams(window.location.search);
+            sesion.usuario = urlParams.get('u') || sessionStorage.getItem('ipostel_usuario') || '';
+            sesion.rol = (urlParams.get('rol') || sessionStorage.getItem('ipostel_rol') || '').toUpperCase();
 
-        // Guardar Master Individual
-        document.getElementById('formMaster').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            btn.innerHTML = 'Guardando...';
-
-            const datos = {
-                accion: 'crearMaster',
-                origen: document.getElementById('origen').value,
-                destino: document.getElementById('destino').value,
-                piezas: document.getElementById('piezas').value,
-                peso: document.getElementById('peso').value,
-                guiaMrw: document.getElementById('guiaMrw').value
-            };
-
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: new URLSearchParams(datos)
-                });
-                const data = await response.json();
-
-                if (data.exito) {
-                    Swal.fire('¡Guardado!', 'El Master ha sido creado.', 'success');
-                    document.getElementById('formMaster').reset();
-                    cargarMasters();
-                } else {
-                    Swal.fire('Error', data.mensaje, 'error');
-                }
-            } catch (error) {
-                Swal.fire('Error de conexión', 'No se pudo conectar con el servidor.', 'error');
+            if (!sesion.usuario || sesion.rol !== 'COORD_ENCAM') {
+                Swal.fire('Acceso Restringido', 'Debe iniciar sesión como Coordinador de Encaminamiento.', 'warning')
+                    .then(() => window.location.href = 'index.html');
+                return;
             }
 
-            btn.disabled = false;
-            btn.innerHTML = 'Guardar Master';
+            // 2. Carga inicial
+            cargarMasters();
+
+            // 3. Evento del formulario
+            document.getElementById('formMaster').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = e.target.querySelector('button[type="submit"]');
+                btn.disabled = true;
+                btn.innerHTML = 'Guardando...';
+
+                const datos = {
+                    accion: 'crearMaster',
+                    origen: document.getElementById('origen').value,
+                    destino: document.getElementById('destino').value,
+                    piezas: document.getElementById('piezas').value,
+                    peso: document.getElementById('peso').value,
+                    guiaMrw: document.getElementById('guiaMrw').value
+                };
+
+                try {
+                    const data = await postAPI(datos);
+                    if (data.exito) {
+                        Swal.fire('¡Guardado!', 'El Master ha sido creado.', 'success');
+                        document.getElementById('formMaster').reset();
+                        cargarMasters();
+                    } else {
+                        Swal.fire('Error', data.mensaje, 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error de conexión', 'No se pudo conectar con el servidor.', 'error');
+                }
+
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar Master';
+            });
         });
 
-                // Cargar tabla
+        function cerrarSesion() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // ==========================================
+        // BUSCADOR UNIVERSAL DE PAQUETES
+        // ==========================================
+        function buscarPaqueteUniversal() {
+            Swal.fire({
+                title: '🔍 Rastreador de Paquetes',
+                input: 'text',
+                inputLabel: 'Ingrese el código de seguimiento o ID Master',
+                inputPlaceholder: 'Ej: H51D8 o MST-XXXXX',
+                showCancelButton: true,
+                confirmButtonText: 'Buscar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#0d1b5e',
+                inputAttributes: { autocapitalize: 'off', autocomplete: 'off' }
+            }).then(r => {
+                if (r.isConfirmed && r.value) {
+                    Swal.fire({ title: 'Buscando en el sistema...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    
+                    postAPI({ accion: 'buscarPaquete', codigo: r.value.trim() }).then(resp => {
+                        Swal.close();
+                        if (resp.exito && resp.paquete) {
+                            const p = resp.paquete;
+                            let badgeRecepcion = 'bg-secondary';
+                            if (p.estatusRecepcion === 'Pendiente_Recepcion') badgeRecepcion = 'bg-warning text-dark';
+                            else if (p.estatusRecepcion === 'En_Custodia') badgeRecepcion = 'bg-primary';
+                            else if (p.estatusRecepcion === 'Entregado') badgeRecepcion = 'bg-success';
+                            else if (p.estatusRecepcion === 'Extraviado' || p.estatusRecepcion === 'Retrasado') badgeRecepcion = 'bg-danger';
+
+                            Swal.fire({
+                                title: '📦 Resultados: ' + p.codigo,
+                                html: `
+                                    <div class="text-start bg-light p-3 rounded">
+                                        <div class="row g-2">
+                                            <div class="col-6"><small class="text-muted">Estado General:</small><br><span class="badge bg-info text-dark">${p.estatusGeneral}</span></div>
+                                            <div class="col-6"><small class="text-muted">Estado en OPT:</small><br><span class="badge ${badgeRecepcion}">${p.estatusRecepcion}</span></div>
+                                            <div class="col-12"><small class="text-muted">OPT Destino:</small><br><b>${p.optDestino}</b></div>
+                                            <hr class="my-2">
+                                            <div class="col-6"><small class="text-muted">Origen:</small><br>${p.origen}</div>
+                                            <div class="col-6"><small class="text-muted">Destino:</small><br>${p.destino}</div>
+                                            <div class="col-4"><small class="text-muted">Piezas:</small><br><b>${p.piezas}</b></div>
+                                            <div class="col-8"><small class="text-muted">Guía MRW:</small><br>${p.guiaMrw}</div>
+                                        </div>
+                                    </div>
+                                `,
+                                icon: 'success',
+                                confirmButtonColor: '#0d1b5e',
+                                width: '600px'
+                            });
+                        } else {
+                            Swal.fire('No encontrado', resp.mensaje || 'El código no existe en el sistema.', 'warning');
+                        }
+                    }).catch(() => {
+                        Swal.close();
+                        Swal.fire('Error de conexión', 'No se pudo comunicar con el servidor.', 'error');
+                    });
+                }
+            });
+        }
+
         async function cargarMasters() {
             const tbody = document.getElementById('tablaMasters');
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Cargando datos...</td></tr>'; // Cambiado a 6
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Cargando datos...</td></tr>';
 
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: new URLSearchParams({ accion: 'obtenerMasters' })
-                });
-                const data = await response.json();
+                const data = await postAPI({ accion: 'obtenerMasters' });
 
                 if (data.exito) {
                     tbody.innerHTML = '';
                     if (data.masters.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No hay Masters registrados.</td></tr>'; // Cambiado a 6
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No hay Masters registrados.</td></tr>';
+                        return;
                     }
                     data.masters.forEach(m => {
-                        // CORREGIDO: Todo el contenido dentro del <tr>
                         tbody.innerHTML += `
                             <tr>
-                                <td class="fw-bold">${m.id}</td>
-                                <td>${m.origen}</td>
-                                <td>${m.destino}</td>
-                                <td>${m.piezas}</td>
-                                <td><span class="badge bg-secondary">${m.estatus}</span></td>
+                                <td class="fw-bold">${m.id || 'N/A'}</td>
+                                <td>${m.origen || 'N/A'}</td>
+                                <td>${m.destino || 'N/A'}</td>
+                                <td>${m.piezas || 0}</td>
+                                <td><span class="badge bg-secondary">${m.estatus || 'N/A'}</span></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-info" onclick="abrirSubidaFoto('${m.id}')">
                                         <i class="bi bi-camera"></i> Subir
@@ -190,28 +263,24 @@
                             </tr>
                         `;
                     });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">${data.mensaje}</td></tr>`;
                 }
             } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Error al cargar datos.</td></tr>'; // Cambiado a 6
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
             }
         }
 
-        // Emitir Reporte PDF
         async function emitirReporte() {
             Swal.fire({
                 title: 'Generando Reporte...',
                 text: 'Por favor espere, esto puede tardar unos segundos.',
                 allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
+                didOpen: () => Swal.showLoading()
             });
 
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: new URLSearchParams({ accion: 'generarReporte' })
-                });
-                const data = await response.json();
-
+                const data = await postAPI({ accion: 'generarReporte' });
                 if (data.exito) {
                     Swal.fire('¡Enviado!', data.mensaje, 'success');
                 } else {
@@ -243,11 +312,7 @@
                 if (result.isConfirmed) {
                     Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                     
-                    fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        body: new URLSearchParams({ accion: 'cargarMasivo', texto: result.value })
-                    })
-                    .then(res => res.json())
+                    postAPI({ accion: 'cargarMasivo', texto: result.value })
                     .then(resp => {
                         if (resp.exito) {
                             Swal.fire('¡Éxito!', resp.mensaje, 'success');
@@ -260,59 +325,70 @@
                 }
             });
         }
+
         function abrirSubidaFoto(idMaster) {
-    Swal.fire({
-        title: 'Subir Foto de Balanza',
-        html: `
-            <p class="small text-muted mb-2">Master: <b>${idMaster}</b></p>
-            <input type="file" id="fotoInput" accept="image/*" capture="environment" class="form-control">
-            <small class="text-muted mt-2 d-block">La imagen se comprimirá automáticamente.</small>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Subir Foto',
-        confirmButtonColor: '#0d1b5e',
-        preConfirm: () => {
-            const file = document.getElementById('fotoInput').files[0];
-            if (!file) return Swal.showValidationMessage('Selecciona una foto.');
-            
-            return new Promise((resolve, reject) => {
-                // Comprimir la imagen antes de enviar (para no saturar el Drive)
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800; // Reducir tamaño para ahorrar espacio
-                        const scaleSize = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleSize;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7); // Calidad 70%
-                        resolve({ idMaster: idMaster, imagen: dataUrl });
-                    };
-                };
-                reader.onerror = (error) => reject(error);
+            Swal.fire({
+                title: 'Subir Foto de Balanza',
+                html: `
+                    <p class="small text-muted mb-2">Master: <b>${idMaster}</b></p>
+                    <input type="file" id="fotoInput" accept="image/*" capture="environment" class="form-control">
+                    <small class="text-muted mt-2 d-block">La imagen se comprimirá automáticamente.</small>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Subir Foto',
+                confirmButtonColor: '#0d1b5e',
+                preConfirm: () => {
+                    const file = document.getElementById('fotoInput').files[0];
+                    if (!file) return Swal.showValidationMessage('Selecciona una foto.');
+                    
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = (e) => {
+                            const img = new Image();
+                            img.src = e.target.result;
+                            img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                const MAX_WIDTH = 800;
+                                const scaleSize = MAX_WIDTH / img.width;
+                                canvas.width = MAX_WIDTH;
+                                canvas.height = img.height * scaleSize;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                                resolve({ idMaster: idMaster, imagen: dataUrl });
+                            };
+                        };
+                        reader.onerror = (error) => reject(error);
+                    });
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Subiendo...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    postAPI({ 
+                        accion: 'subirFotoBalanza', 
+                        idMaster: result.value.idMaster, 
+                        imagen: result.value.imagen 
+                    })
+                    .then(resp => {
+                        if (resp.exito) Swal.fire('¡Subida!', 'La foto se guardó correctamente.', 'success');
+                        else Swal.fire('Error', resp.mensaje, 'error');
+                    })
+                    .catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
+                }
             });
         }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire({ title: 'Subiendo...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: new URLSearchParams({ accion: 'subirFotoBalanza', idMaster: result.value.idMaster, imagen: result.value.imagen })
-            })
-            .then(res => res.json())
-            .then(resp => {
-                if (resp.exito) Swal.fire('¡Subida!', 'La foto se guardó correctamente.', 'success');
-                else Swal.fire('Error', resp.mensaje, 'error');
-            })
-            .catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
+
+        // ==========================================
+        // UTILIDAD ESTÁNDAR DE PETICIONES (JSON)
+        // ==========================================
+        function postAPI(payload) {
+            return fetch(API_URL, { 
+                method: 'POST', 
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(r => r.json());
         }
-    });
-}
     </script>
 </body>
 </html>
