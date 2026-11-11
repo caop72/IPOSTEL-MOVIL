@@ -19,6 +19,7 @@
         .table th { background-color: #f8f9fa; font-size: 0.85rem; text-transform: uppercase; color: #6c757d; }
         .badge-vector { background-color: #e9ecef; color: #0d1b5e; font-weight: bold; padding: 5px 10px; border-radius: 5px; }
         .fila-total { background-color: #f8f9fa; font-weight: bold; }
+        .oculto { display: none !important; }
     </style>
 </head>
 <body>
@@ -27,8 +28,11 @@
   <div class="container-fluid">
     <span class="navbar-brand mb-0 h5">📈 Observatorio - <span id="nombreUsuario">Cargando...</span></span>
     <div class="d-flex gap-2">
+      <button class="btn btn-outline-light btn-sm" onclick="buscarPaqueteUniversal()">
+        <i class="bi bi-search"></i> Buscar Paquete
+      </button>
       <a href="microentregas.html" class="btn btn-success btn-sm fw-bold text-white">
-        <i class="bi bi-box-seam"></i> Auditoría Micro Entregas
+        <i class="bi bi-box-seam"></i> Auditoría Micro
       </a>
       <button class="btn btn-outline-light btn-sm" onclick="abrirConfiguracion()">⚙️ Config</button>
       <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Salir</button>
@@ -153,8 +157,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
   let chartEstatus, chartDestinos;
+  const sesion = { usuario: '', rol: '' };
 
   document.addEventListener('DOMContentLoaded', function () {
     // 1. Leer el usuario y rol desde la URL o desde sessionStorage
@@ -162,24 +167,25 @@
     const rolUrl = (urlParams.get('rol') || '').toUpperCase();
     const usuarioUrl = urlParams.get('u') || '';
     
-    let rolActual = (rolUrl || sessionStorage.getItem('ipostel_rol') || sessionStorage.getItem('rol') || '').toUpperCase();
-    let usuarioLogueado = (usuarioUrl || sessionStorage.getItem('ipostel_usuario') || sessionStorage.getItem('usuario') || '').trim();
+    sesion.rol = (rolUrl || sessionStorage.getItem('ipostel_rol') || sessionStorage.getItem('rol') || '').toUpperCase();
+    sesion.usuario = (usuarioUrl || sessionStorage.getItem('ipostel_usuario') || sessionStorage.getItem('usuario') || '').trim();
 
     // 2. Guardar en memoria por si recarga
-    if (rolActual) sessionStorage.setItem('ipostel_rol', rolActual);
-    if (usuarioLogueado) sessionStorage.setItem('ipostel_usuario', usuarioLogueado);
+    if (sesion.rol) sessionStorage.setItem('ipostel_rol', sesion.rol);
+    if (sesion.usuario) sessionStorage.setItem('ipostel_usuario', sesion.usuario);
 
     // 3. Lista de roles permitidos
     const rolesPermitidos = ['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO', 'DIR_OPER', 'DIR_OPERACIONES', 'DIRECTOR_OPERACIONES'];
 
-    // 4. Si NO hay usuario o el rol NO está permitido, lo pateamos al login
-    if (!usuarioLogueado || !rolesPermitidos.includes(rolActual)) { 
-        setTimeout(() => { window.location.href = 'index.html'; }, 100); 
+    // 4. Si NO hay usuario o el rol NO está permitido, lo redirigimos al login
+    if (!sesion.usuario || !rolesPermitidos.includes(sesion.rol)) { 
+        Swal.fire('Acceso Restringido', 'Debe iniciar sesión con permisos de Observatorio.', 'warning')
+            .then(() => window.location.href = 'index.html');
         return; 
     }
     
     // 5. Mostrar nombre en la barra superior
-    document.getElementById('nombreUsuario').innerText = usuarioLogueado;
+    document.getElementById('nombreUsuario').innerText = sesion.usuario;
 
     // 6. Filtros por defecto (hoy)
     const hoy = new Date().toISOString().split('T')[0];
@@ -189,10 +195,16 @@
     cargarGeneral(); 
   });
 
-  function cerrarSesion() { sessionStorage.clear(); window.location.href = 'index.html'; }
+  function cerrarSesion() { 
+      sessionStorage.clear(); 
+      window.location.href = 'index.html'; 
+  }
 
   function obtenerFiltros() {
-    return { fechaInicio: document.getElementById('filtroDesde').value, fechaFin: document.getElementById('filtroHasta').value };
+    return { 
+        fechaInicio: document.getElementById('filtroDesde').value, 
+        fechaFin: document.getElementById('filtroHasta').value 
+    };
   }
 
   function limpiarFiltros() {
@@ -213,19 +225,28 @@
 
   function cargarGeneral() {
     const filtros = obtenerFiltros();
-    fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerEstadisticas', ...filtros }) })
-    .then(res => res.json()).then(resp => { if (resp.exito) renderizarGeneral(resp.stats); });
+    postAPI({ accion: 'obtenerEstadisticas', ...filtros })
+    .then(resp => { 
+        if (resp.exito) renderizarGeneral(resp.stats); 
+    });
   }
 
   function renderizarGeneral(stats) {
-    document.getElementById('totalMasters').innerText = stats.total;
-    document.getElementById('totalPiezas').innerText = stats.piezas;
-    document.getElementById('totalPeso').innerText = stats.peso.toFixed(1);
-    document.getElementById('totalRetrasos').innerText = stats.retraso + stats.critico;
+    document.getElementById('totalMasters').innerText = stats.total || 0;
+    document.getElementById('totalPiezas').innerText = stats.piezas || 0;
+    document.getElementById('totalPeso').innerText = (stats.peso || 0).toFixed(1);
+    document.getElementById('totalRetrasos').innerText = (stats.retraso || 0) + (stats.critico || 0);
 
     if (chartEstatus) chartEstatus.destroy();
     chartEstatus = new Chart(document.getElementById('graficoEstatus').getContext('2d'), {
-      type: 'pie', data: { labels: ['A Tiempo', 'Retraso', 'Crítico', 'Extraviado'], datasets: [{ data: [stats.ok, stats.retraso, stats.critico, stats.extraviado], backgroundColor: ['#198754', '#ffc107', '#dc3545', '#6c757d'] }] },
+      type: 'pie', 
+      data: { 
+          labels: ['A Tiempo', 'Retraso', 'Crítico', 'Extraviado'], 
+          datasets: [{ 
+              data: [stats.ok || 0, stats.retraso || 0, stats.critico || 0, stats.extraviado || 0], 
+              backgroundColor: ['#198754', '#ffc107', '#dc3545', '#6c757d'] 
+          }] 
+      },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 
@@ -233,7 +254,14 @@
     if (stats.destinos && Object.keys(stats.destinos).length > 0) {
         const destinosArray = Object.entries(stats.destinos).sort((a, b) => b[1] - a[1]).slice(0, 5);
         chartDestinos = new Chart(document.getElementById('graficoDestinos').getContext('2d'), {
-            type: 'doughnut', data: { labels: destinosArray.map(d=>d[0]), datasets: [{ data: destinosArray.map(d=>d[1]), backgroundColor: ['#0d1b5e', '#00d2ff', '#198754', '#ffc107', '#dc3545'] }] },
+            type: 'doughnut', 
+            data: { 
+                labels: destinosArray.map(d => d[0]), 
+                datasets: [{ 
+                    data: destinosArray.map(d => d[1]), 
+                    backgroundColor: ['#0d1b5e', '#00d2ff', '#198754', '#ffc107', '#dc3545'] 
+                }] 
+            },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
         });
     }
@@ -244,16 +272,15 @@
     const tbody = document.getElementById('tablaTablero');
     tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Cargando operaciones...</td></tr>';
 
-    fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerTableroOperaciones', ...filtros }) })
-    .then(res => res.json())
+    postAPI({ accion: 'obtenerTableroOperaciones', ...filtros })
     .then(resp => {
         if (resp.exito) {
             tbody.innerHTML = '';
-            document.getElementById('countTablero').innerText = resp.datos.length + ' Registros';
-            document.getElementById('countTransito').innerText = resp.resumen.enTransito;
-            document.getElementById('countRetrasados').innerText = resp.resumen.retrasados;
+            document.getElementById('countTablero').innerText = (resp.datos || []).length + ' Registros';
+            document.getElementById('countTransito').innerText = resp.resumen?.enTransito || 0;
+            document.getElementById('countRetrasados').innerText = resp.resumen?.retrasados || 0;
             
-            if (resp.datos.length === 0) {
+            if (!resp.datos || resp.datos.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay operaciones en este rango de fechas.</td></tr>';
                 return;
             }
@@ -272,11 +299,11 @@
 
                 tbody.innerHTML += `
                     <tr class="${claseFila}">
-                        <td class="fw-bold text-primary">${op.id}</td>
-                        <td><span class="badge-vector">${op.vector}</span></td>
-                        <td><div class="small text-muted">${op.fechaSalida}</div><div class="small fw-bold">${op.dias}d ${op.horas % 24}h</div></td>
-                        <td><span class="badge bg-secondary mb-1">${op.estatus}</span>${op.guiaMrw ? `<br><small class="text-muted">MRW: ${op.guiaMrw}</small>` : ''}</td>
-                        <td><span class="badge ${badgeAlerta}"><i class="bi ${iconoAlerta}"></i> ${textoAlerta}</span>${op.estaRetrasado ? `<br><small class="text-danger">SLA: ${op.slaHoras}h</small>` : ''}</td>
+                        <td class="fw-bold text-primary">${op.id || 'N/A'}</td>
+                        <td><span class="badge-vector">${op.vector || 'N/A'}</span></td>
+                        <td><div class="small text-muted">${op.fechaSalida || 'N/A'}</div><div class="small fw-bold">${op.dias || 0}d ${op.horas ? op.horas % 24 : 0}h</div></td>
+                        <td><span class="badge bg-secondary mb-1">${op.estatus || 'N/A'}</span>${op.guiaMrw ? `<br><small class="text-muted">MRW: ${op.guiaMrw}</small>` : ''}</td>
+                        <td><span class="badge ${badgeAlerta}"><i class="bi ${iconoAlerta}"></i> ${textoAlerta}</span>${op.estaRetrasado ? `<br><small class="text-danger">SLA: ${op.slaHoras || 0}h</small>` : ''}</td>
                     </tr>
                 `;
             });
@@ -289,12 +316,14 @@
     const contenedor = document.getElementById('contenedorRelacion');
     contenedor.innerHTML = '<div class="col-12 text-center py-4">Cargando cuadro de relación...</div>';
 
-    fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerResumenRelacion', ...filtros }) })
-    .then(res => res.json())
+    postAPI({ accion: 'obtenerResumenRelacion', ...filtros })
     .then(resp => {
         if (resp.exito) {
-            let estados = Object.keys(resp.datos);
-            if (estados.length === 0) { contenedor.innerHTML = '<div class="col-12 text-center py-4 text-muted">No hay movimientos en este rango de fechas.</div>'; return; }
+            let estados = Object.keys(resp.datos || {});
+            if (estados.length === 0) { 
+                contenedor.innerHTML = '<div class="col-12 text-center py-4 text-muted">No hay movimientos en este rango de fechas.</div>'; 
+                return; 
+            }
 
             estados.sort((a, b) => {
                 if (a === 'GRAN CARACAS') return -1; if (b === 'GRAN CARACAS') return 1;
@@ -307,8 +336,8 @@
 
             estados.forEach(estado => {
                 const data = resp.datos[estado];
-                const enviadosArray = Object.entries(data.enviados);
-                const recibidosArray = Object.entries(data.recibidos);
+                const enviadosArray = Object.entries(data.enviados || {});
+                const recibidosArray = Object.entries(data.recibidos || {});
 
                 if (enviadosArray.length > 0 || estado === 'GRAN CARACAS' || estado === 'ALTOS MIRANDINOS') {
                     htmlEnv += `<tr><td class="fw-bold align-middle">${estado}</td><td>`;
@@ -325,8 +354,8 @@
                 }
             });
 
-            htmlEnv += `</tbody><tfoot><tr class="fila-total"><td>TOTAL</td><td>${resp.totalEnv} Masters Enviados</td></tr></tfoot></table></div></div></div>`;
-            htmlRec += `</tbody><tfoot><tr class="fila-total"><td>TOTAL</td><td>${resp.totalRec} Masters Recibidos</td></tr></tfoot></table></div></div></div>`;
+            htmlEnv += `</tbody><tfoot><tr class="fila-total"><td>TOTAL</td><td>${resp.totalEnv || 0} Masters Enviados</td></tr></tfoot></table></div></div></div>`;
+            htmlRec += `</tbody><tfoot><tr class="fila-total"><td>TOTAL</td><td>${resp.totalRec || 0} Masters Recibidos</td></tr></tfoot></table></div></div></div>`;
             contenedor.innerHTML = htmlEnv + htmlRec;
         }
     });
@@ -334,8 +363,11 @@
 
   function abrirConfiguracion() {
     Swal.fire({ title: 'Cargando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerConfiguracion' }) })
-    .then(res => res.json()).then(resp => { if (!resp.exito) return Swal.fire('Error', resp.mensaje, 'error'); mostrarModalConfiguracion(resp.config); })
+    postAPI({ accion: 'obtenerConfiguracion' })
+    .then(resp => { 
+        if (resp.exito) mostrarModalConfiguracion(resp.config); 
+        else Swal.fire('Error', resp.mensaje, 'error');
+    })
     .catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
   }
 
@@ -349,7 +381,12 @@
     htmlForm += '</div>';
 
     Swal.fire({
-      title: '⚙️ Configuración', html: htmlForm, width: '600px', showCancelButton: true, confirmButtonText: '💾 Guardar', confirmButtonColor: '#0d1b5e',
+      title: '⚙️ Configuración', 
+      html: htmlForm, 
+      width: '600px', 
+      showCancelButton: true, 
+      confirmButtonText: '💾 Guardar', 
+      confirmButtonColor: '#0d1b5e',
       preConfirm: () => {
         const cambios = [];
         config.forEach(item => {
@@ -358,24 +395,107 @@
         });
         return cambios;
       }
-    }).then((result) => { if (result.isConfirmed) { if (result.value.length === 0) return Swal.fire('Sin cambios', 'No modificaste nada.', 'info'); guardarConfiguracion(result.value); } });
+    }).then((result) => { 
+        if (result.isConfirmed) { 
+            if (result.value.length === 0) return Swal.fire('Sin cambios', 'No modificaste nada.', 'info'); 
+            guardarConfiguracion(result.value); 
+        } 
+    });
   }
 
   function guardarConfiguracion(cambios) {
     Swal.fire({ title: 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    let promesas = cambios.map(cambio => fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'actualizarConfiguracion', clave: cambio.clave, valor: cambio.valor }) }).then(res => res.json()));
-    Promise.all(promesas).then(resultados => {
-      const errores = resultados.filter(r => !r.exito);
-      if (errores.length > 0) Swal.fire('Error', errores.map(e => e.mensaje).join('<br>'), 'error');
-      else Swal.fire({ title: '¡Guardado!', text: 'Configuración actualizada.', icon: 'success', timer: 2500, showConfirmButton: false });
-    }).catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
+    
+    // OPTIMIZACIÓN: Enviamos todos los cambios en una sola petición al backend
+    postAPI({ accion: 'actualizarConfiguracion', cambios: cambios })
+    .then(resp => {
+        if (resp.exito) {
+            Swal.fire({ title: '¡Guardado!', text: 'Configuración actualizada.', icon: 'success', timer: 2500, showConfirmButton: false });
+        } else {
+            Swal.fire('Error', resp.mensaje, 'error');
+        }
+    })
+    .catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
   }
 
   function generarReporte() {
     Swal.fire({ title: 'Generando Reporte...', text: 'Por favor espere, esto puede tardar unos segundos.', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'generarReporte' }) })
-    .then(res => res.json()).then(resp => { if (resp.exito) Swal.fire('¡Éxito!', resp.mensaje, 'success'); else Swal.fire('Atención', resp.mensaje, 'warning'); })
+    postAPI({ accion: 'generarReporte' })
+    .then(resp => { 
+        if (resp.exito) Swal.fire('¡Éxito!', resp.mensaje, 'success'); 
+        else Swal.fire('Atención', resp.mensaje, 'warning'); 
+    })
     .catch(() => Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error'));
+  }
+
+  // ==========================================
+  // BUSCADOR UNIVERSAL DE PAQUETES
+  // ==========================================
+  function buscarPaqueteUniversal() {
+    Swal.fire({
+        title: '🔍 Rastreador de Paquetes',
+        input: 'text',
+        inputLabel: 'Ingrese el código de seguimiento o ID Master',
+        inputPlaceholder: 'Ej: H51D8 o MST-XXXXX',
+        showCancelButton: true,
+        confirmButtonText: 'Buscar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#0d1b5e',
+        inputAttributes: { autocapitalize: 'off', autocomplete: 'off' }
+    }).then(r => {
+        if (r.isConfirmed && r.value) {
+            Swal.fire({ title: 'Buscando en el sistema...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            postAPI({ accion: 'buscarPaquete', codigo: r.value.trim() }).then(resp => {
+                Swal.close();
+                if (resp.exito && resp.paquete) {
+                    const p = resp.paquete;
+                    let badgeRecepcion = 'bg-secondary';
+                    if (p.estatusRecepcion === 'Pendiente_Recepcion') badgeRecepcion = 'bg-warning text-dark';
+                    else if (p.estatusRecepcion === 'En_Custodia') badgeRecepcion = 'bg-primary';
+                    else if (p.estatusRecepcion === 'Entregado') badgeRecepcion = 'bg-success';
+                    else if (p.estatusRecepcion === 'Extraviado' || p.estatusRecepcion === 'Retrasado') badgeRecepcion = 'bg-danger';
+
+                    Swal.fire({
+                        title: '📦 Resultados: ' + p.codigo,
+                        html: `
+                            <div class="text-start bg-light p-3 rounded">
+                                <div class="row g-2">
+                                    <div class="col-6"><small class="text-muted">Estado General:</small><br><span class="badge bg-info text-dark">${p.estatusGeneral}</span></div>
+                                    <div class="col-6"><small class="text-muted">Estado en OPT:</small><br><span class="badge ${badgeRecepcion}">${p.estatusRecepcion}</span></div>
+                                    <div class="col-12"><small class="text-muted">OPT Destino:</small><br><b>${p.optDestino}</b></div>
+                                    <hr class="my-2">
+                                    <div class="col-6"><small class="text-muted">Origen:</small><br>${p.origen}</div>
+                                    <div class="col-6"><small class="text-muted">Destino:</small><br>${p.destino}</div>
+                                    <div class="col-4"><small class="text-muted">Piezas:</small><br><b>${p.piezas}</b></div>
+                                    <div class="col-8"><small class="text-muted">Guía MRW:</small><br>${p.guiaMrw}</div>
+                                </div>
+                            </div>
+                        `,
+                        icon: 'success',
+                        confirmButtonColor: '#0d1b5e',
+                        width: '600px'
+                    });
+                } else {
+                    Swal.fire('No encontrado', resp.mensaje || 'El código no existe en el sistema.', 'warning');
+                }
+            }).catch(() => {
+                Swal.close();
+                Swal.fire('Error de conexión', 'No se pudo comunicar con el servidor.', 'error');
+            });
+        }
+    });
+  }
+
+  // ==========================================
+  // UTILIDAD ESTÁNDAR DE PETICIONES (JSON)
+  // ==========================================
+  function postAPI(payload) {
+    return fetch(API_URL, { 
+        method: 'POST', 
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    }).then(r => r.json());
   }
 </script>
 </body>
