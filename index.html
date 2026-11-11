@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IPOSTEL Móvil — Bienvenido</title>
+<!-- CORREGIDO: Etiqueta link de Bootstrap -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
@@ -22,100 +23,47 @@
     background-color: #f4f6f9;
   }
 
-  /* PANTALLA DE BIENVENIDA (Azul con letras plateadas) */
   #pantallaBienvenida {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: linear-gradient(135deg, var(--azul-oscuro) 0%, var(--azul-claro) 100%);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    color: white;
-    transition: opacity 0.6s ease;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    z-index: 9999; color: white; transition: opacity 0.6s ease;
   }
 
-  .logo-bienvenida {
-    font-size: 4rem;
-    margin-bottom: 20px;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
-  }
+  .logo-bienvenida { font-size: 4rem; margin-bottom: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
 
   #pantallaBienvenida h1 {
-    font-size: 2.8rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    color: var(--plateado);
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+    font-size: 2.8rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 10px;
+    color: var(--plateado); text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
   }
 
-  #pantallaBienvenida p {
-    font-size: 1.1rem;
-    color: #a0aec0;
-    margin-bottom: 40px;
-    letter-spacing: 2px;
-  }
+  #pantallaBienvenida p { font-size: 1.1rem; color: #a0aec0; margin-bottom: 40px; letter-spacing: 2px; }
 
   .btn-bienvenida { 
-    background: transparent; 
-    border: 2px solid var(--plateado); 
-    color: var(--plateado); 
-    padding: 12px 50px; 
-    border-radius: 30px; 
-    font-weight: 600; 
-    font-size: 1.1rem;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    background: transparent; border: 2px solid var(--plateado); color: var(--plateado); 
+    padding: 12px 50px; border-radius: 30px; font-weight: 600; font-size: 1.1rem;
+    transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
   }
 
-  .btn-bienvenida:hover { 
-    background: var(--plateado); 
-    color: var(--azul-oscuro); 
-    box-shadow: 0 0 15px rgba(209, 213, 219, 0.5);
-  }
+  .btn-bienvenida:hover { background: var(--plateado); color: var(--azul-oscuro); box-shadow: 0 0 15px rgba(209, 213, 219, 0.5); }
 
-  /* PANTALLA DE LOGIN */
-  #pantallaLogin {
-    display: none;
-    min-height: 100vh;
-    padding: 40px 20px;
-    background: linear-gradient(135deg, var(--azul-oscuro) 0%, var(--azul-claro) 100%);
-  }
+  #pantallaLogin { display: none; min-height: 100vh; padding: 40px 20px; background: linear-gradient(135deg, var(--azul-oscuro) 0%, var(--azul-claro) 100%); }
 
-  .card-ipostel { 
-    background: #fff; 
-    color: #222;
-    border-radius: 12px; 
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2); 
-    width: 100%; 
-    max-width: 500px; 
-    margin: auto; 
-    padding: 30px;
-  }
+  .card-ipostel { background: #fff; color: #222; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); width: 100%; max-width: 500px; margin: auto; padding: 30px; }
   
   .titulo { color: var(--azul-oscuro); font-weight: 700; margin-bottom: 0; }
   .subtitulo { color: #6c757d; font-size: 0.9rem; }
-
-  .btn-ipostel { 
-    background: var(--azul-oscuro); color: #fff; font-weight: 600; 
-    border: none; padding: 12px; border-radius: 8px; transition: 0.3s;
-  }
+  .btn-ipostel { background: var(--azul-oscuro); color: #fff; font-weight: 600; border: none; padding: 12px; border-radius: 8px; transition: 0.3s; }
   .btn-ipostel:hover { background: #061133; color: var(--cyan); }
-
   .form-label { font-weight: 600; color: #444; font-size: 0.85rem; margin-bottom: 4px; }
   .form-control, .form-select { border-radius: 8px; border: 1px solid #ced4da; font-size: 0.95rem; }
   .form-control:focus, .form-select:focus { border-color: var(--cyan); box-shadow: 0 0 0 0.25rem rgba(0, 210, 255, 0.25); }
-  
   .oculto { display: none !important; }
   .box-clave { background: #f8f9fa; border-radius: 8px; padding: 15px; border: 1px solid #e9ecef; }
 </style>
 </head>
 <body>
 
-<!-- PANTALLA DE BIENVENIDA -->
 <div id="pantallaBienvenida">
   <div class="logo-bienvenida">📮</div> 
   <h1>IPOSTEL Móvil</h1>
@@ -123,7 +71,6 @@
   <button class="btn btn-bienvenida" onclick="entrarAlSistema()">Ingresar</button>
 </div>
 
-<!-- PANTALLA DE LOGIN -->
 <div id="pantallaLogin">
   <div class="card card-ipostel">
     <div class="text-center mb-4">
@@ -131,7 +78,6 @@
       <span class="subtitulo">Seleccione su rol para continuar</span>
     </div>
 
-    <!-- PASO 1: ROL -->
     <div id="pasoRol" class="mb-3">
       <label class="form-label text-primary">Seleccione su Rol</label>
       <select id="selRol" class="form-select fw-bold" onchange="cambiarRol()">
@@ -147,7 +93,6 @@
       </select>
     </div>
 
-    <!-- PASO 2: SUB-Rol (Dirección / Coordinador) -->
     <div id="pasoSubRol" class="mb-3 oculto">
       <label class="form-label">Seleccione opción</label>
       <select id="selSubRol" class="form-select" onchange="verificarUsuario()">
@@ -155,7 +100,6 @@
       </select>
     </div>
 
-    <!-- PASO 3: ESTADO -->
     <div id="pasoEstado" class="mb-3 oculto">
       <label class="form-label">Estado</label>
       <select id="selEstado" class="form-select" onchange="cambiarEstado()">
@@ -163,7 +107,6 @@
       </select>
     </div>
 
-    <!-- PASO 4: OPT -->
     <div id="pasoOPT" class="mb-3 oculto">
       <label class="form-label">OPT</label>
       <select id="selOPT" class="form-select" onchange="verificarUsuario()">
@@ -171,16 +114,12 @@
       </select>
     </div>
 
-    <!-- PASO 5: CREDENCIALES (Login o Registro) -->
     <div id="pasoCredenciales" class="oculto">
-      
-      <!-- 5A. LOGIN EXISTENTE (Solo Clave) -->
       <div id="boxLoginExistente" class="mb-3 box-clave oculto">
         <label class="form-label">Clave de Acceso</label>
         <input id="inpClave" type="password" class="form-control" placeholder="••••">
       </div>
 
-      <!-- 5B. REGISTRO NUEVO (Todos los datos) -->
       <div id="boxRegistroNuevo" class="mb-3 p-3 bg-light rounded border oculto">
         <h6 class="text-primary mb-3 fw-bold">Datos de Registro</h6>
         <div class="mb-2">
@@ -200,28 +139,50 @@
           <input id="inpClaveNueva" type="password" maxlength="4" inputmode="numeric" class="form-control form-control-sm" placeholder="••••">
         </div>
       </div>
-
     </div>
 
-  <!-- BOTONES -->
-<div class="mt-3">
-  <button id="btnRegistrar" class="btn btn-success w-100 mb-2 oculto" onclick="registrarUsuario()">
-    📝 Registrarse
-  </button>
-  <button id="btnIngresar" class="btn btn-ipostel w-100 mb-2 oculto" onclick="enviarAlBackend()">
-    🔑 Ingresar al Sistema
-  </button>
-  <button id="btnVolver" class="btn btn-outline-secondary w-100 oculto" onclick="volverAtras()">
-    ⬅ Volver / Cancelar
-  </button>
+    <div class="mt-3">
+      <button id="btnRegistrar" class="btn btn-success w-100 mb-2 oculto" onclick="registrarUsuario()">
+        📝 Registrarse
+      </button>
+      <button id="btnIngresar" class="btn btn-ipostel w-100 mb-2 oculto" onclick="enviarAlBackend()">
+        🔑 Ingresar al Sistema
+      </button>
+      <button id="btnVolver" class="btn btn-outline-secondary w-100 oculto" onclick="volverAtras()">
+        ⬅ Volver / Cancelar
+      </button>
+    </div>
+
+    <div class="text-center mt-3">
+      <a href="#" onclick="recuperar()" class="small text-decoration-none text-muted">¿Olvidó su clave?</a>
+    </div>
+  </div>
 </div>
+
+<script>
+// 🔥 AQUÍ ESTÁ LA NUEVA URL INTEGRADA
+const API_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
+
+const estadoApp = {
+  rol: null,
+  requiereEstado: false,
+  requiereOPT: false,
+  usuarioExiste: null,
+  estadoSel: null,
+  optSel: null,
+  subRolSel: null
+};
 
 const ROLES_CON_ESTADO = ['GERENCIA_ESTADO', 'JEFE_OPT', 'ANALISTA_OPT'];
 const ROLES_CON_OPT = ['JEFE_OPT', 'ANALISTA_OPT'];
 
+function ocultar(id) {
+  document.getElementById(id).classList.add('oculto');
+}
+
 function ocultarTodo() {
-  ['pasoSubRol', 'pasoEstado', 'pasoOPT', 'pasoCredenciales', 'boxLoginExistente', 'boxRegistroNuevo', 'btnIngresar', 'btnVolver']
-    .forEach(id => document.getElementById(id).classList.add('oculto'));
+  ['pasoSubRol', 'pasoEstado', 'pasoOPT', 'pasoCredenciales', 'boxLoginExistente', 'boxRegistroNuevo', 'btnIngresar', 'btnRegistrar', 'btnVolver']
+    .forEach(id => ocultar(id));
 }
 
 function mostrar(id) {
@@ -274,7 +235,7 @@ function cambiarRol() {
     mostrar('pasoCredenciales');
     mostrar('boxLoginExistente');
     mostrar('btnIngresar');
-    document.getElementById('btnIngresar').textContent = 'Ingresar al Sistema';
+    document.getElementById('btnIngresar').textContent = '🔑 Ingresar al Sistema';
   }
 }
 
@@ -332,7 +293,6 @@ async function verificarUsuario() {
     if (resp.exito) {
       estadoApp.usuarioExiste = resp.existe;
       
-      // LÓGICA DE BOTONES SEPARADOS
       if (resp.existe) {
         ocultar('boxRegistroNuevo');
         mostrar('boxLoginExistente');
@@ -353,6 +313,7 @@ async function verificarUsuario() {
     Swal.fire('Error de red', 'No se pudo verificar el usuario.', 'error');
   }
 }
+
 async function registrarUsuario() {
   const rol = estadoApp.rol;
   const correo = document.getElementById('inpCorreo').value.trim();
@@ -399,6 +360,63 @@ async function registrarUsuario() {
     document.getElementById('btnRegistrar').textContent = '📝 Registrarse';
   }
 }
+
+async function enviarAlBackend() {
+  const rol = estadoApp.rol;
+  let payload = { accion: 'loginArbol', rol: rol };
+  payload.clave = document.getElementById('inpClave').value.trim();
+
+  if (['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO'].includes(rol)) {
+    if (rol === 'PRESIDENCIA') payload.usuario = 'Presidencia';
+    if (rol === 'DESPACHO') payload.usuario = 'Despacho';
+    if (rol === 'OBSERVATORIO') payload.usuario = 'Observatorio';
+  }
+  else if (rol === 'DIRECCION' || rol === 'COORDINADOR') {
+    payload.subRol = estadoApp.subRolSel;
+    if (rol === 'DIRECCION') payload.usuario = (estadoApp.subRolSel === 'CNC') ? 'Director_CNC' : 'Director_Operaciones';
+  }
+  else if (estadoApp.requiereEstado) {
+    payload.estado = estadoApp.estadoSel;
+  }
+
+  if (estadoApp.requiereOPT) {
+    payload.codigoOPT = estadoApp.optSel;
+  }
+
+  document.getElementById('btnIngresar').disabled = true;
+  document.getElementById('btnIngresar').textContent = 'Validando...';
+
+  try {
+    const resp = await post(payload);
+    if (!resp.exito) {
+      Swal.fire('Acceso denegado', resp.mensaje || 'No autorizado', 'error');
+      document.getElementById('btnIngresar').disabled = false;
+      document.getElementById('btnIngresar').textContent = '🔑 Ingresar al Sistema';
+      return;
+    }
+    redirigir(resp);
+  } catch (err) {
+    Swal.fire('Error de conexión', err.message, 'error');
+    document.getElementById('btnIngresar').disabled = false;
+  }
+}
+
+function redirigir(r) {
+  const rol = r.rol || estadoApp.rol;
+  const usuario = r.usuario || '';
+  sessionStorage.setItem('ipostel_rol', rol);
+  sessionStorage.setItem('ipostel_usuario', usuario);
+
+  const rutas = {
+    PRESIDENCIA: 'observatorio.html', DESPACHO: 'observatorio.html', OBSERVATORIO: 'observatorio.html',
+    DIR_CNC: 'microentregas.html', DIR_OPER: 'observatorio.html',
+    GERENTE_ESTADO: 'estados.html', COORD_ENCAM: 'encaminamiento.html', COORD_ALIANZA: 'seguimiento.html',
+    COORD_CNC: 'coordinador_cnc.html', JEFE_OPT: 'portal_opt.html', ANALISTA_OPT: 'portal_opt.html'
+  };
+  const pantalla = r.pantalla || rutas[rol] || 'observatorio.html';
+  window.location.replace(pantalla + (pantalla.includes('?') ? '&' : '?') + 'u=' + encodeURIComponent(usuario) + '&rol=' + encodeURIComponent(rol));
+}
+
 function volverAtras() {
   if (!document.getElementById('pasoCredenciales').classList.contains('oculto')) {
     document.getElementById('pasoCredenciales').classList.add('oculto');
@@ -448,62 +466,6 @@ function cargarOPTs(estado) {
     }
   });
 }
-async function enviarAlBackend() {
-  const rol = estadoApp.rol;
-  let payload = { accion: 'loginArbol', rol: rol };
-
-  // Solo toma la clave del login existente
-  payload.clave = document.getElementById('inpClave').value.trim();
-
-  if (['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO'].includes(rol)) {
-    if (rol === 'PRESIDENCIA') payload.usuario = 'Presidencia';
-    if (rol === 'DESPACHO') payload.usuario = 'Despacho';
-    if (rol === 'OBSERVATORIO') payload.usuario = 'Observatorio';
-  }
-  else if (rol === 'DIRECCION' || rol === 'COORDINADOR') {
-    payload.subRol = estadoApp.subRolSel;
-    if (rol === 'DIRECCION') payload.usuario = (estadoApp.subRolSel === 'CNC') ? 'Director_CNC' : 'Director_Operaciones';
-  }
-  else if (estadoApp.requiereEstado) {
-    payload.estado = estadoApp.estadoSel;
-  }
-
-  if (estadoApp.requiereOPT) {
-    payload.codigoOPT = estadoApp.optSel;
-  }
-
-  document.getElementById('btnIngresar').disabled = true;
-  document.getElementById('btnIngresar').textContent = 'Validando...';
-
-  try {
-    const resp = await post(payload);
-    if (!resp.exito) {
-      Swal.fire('Acceso denegado', resp.mensaje || 'No autorizado', 'error');
-      document.getElementById('btnIngresar').disabled = false;
-      document.getElementById('btnIngresar').textContent = '🔑 Ingresar al Sistema';
-      return;
-    }
-    redirigir(resp);
-  } catch (err) {
-    Swal.fire('Error de conexión', err.message, 'error');
-    document.getElementById('btnIngresar').disabled = false;
-  }
-}
-function redirigir(r) {
-  const rol = r.rol || estadoApp.rol;
-  const usuario = r.usuario || '';
-  sessionStorage.setItem('ipostel_rol', rol);
-  sessionStorage.setItem('ipostel_usuario', usuario);
-
-  const rutas = {
-    PRESIDENCIA: 'observatorio.html', DESPACHO: 'observatorio.html', OBSERVATORIO: 'observatorio.html',
-    DIR_CNC: 'microentregas.html', DIR_OPER: 'observatorio.html',
-    GERENTE_ESTADO: 'estados.html', COORD_ENCAM: 'encaminamiento.html', COORD_ALIANZA: 'seguimiento.html',
-    COORD_CNC: 'coordinador_cnc.html', JEFE_OPT: 'portal_opt.html', ANALISTA_OPT: 'portal_opt.html'
-  };
-  const pantalla = r.pantalla || rutas[rol] || 'observatorio.html';
-  window.location.replace(pantalla + (pantalla.includes('?') ? '&' : '?') + 'u=' + encodeURIComponent(usuario) + '&rol=' + encodeURIComponent(rol));
-}
 
 function recuperar() {
   Swal.fire({
@@ -521,152 +483,6 @@ function recuperar() {
 
 function post(payload) {
   return fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
-}
-async function verificarUsuario() {
-  if (estadoApp.rol === 'DIRECCION' || estadoApp.rol === 'COORDINADOR') {
-    estadoApp.subRolSel = document.getElementById('selSubRol').value;
-    if (!estadoApp.subRolSel) return;
-  }
-
-  if (estadoApp.requiereOPT) {
-    estadoApp.optSel = document.getElementById('selOPT').value;
-    if (!estadoApp.optSel) {
-      mostrar('pasoEstado');
-      mostrar('pasoOPT');
-      mostrar('btnVolver');
-      return;
-    }
-  }
-
-  mostrar('pasoCredenciales');
-  mostrar('btnVolver');
-  
-  const payload = {
-    accion: 'verificarExistencia',
-    rol: estadoApp.rol,
-    estado: estadoApp.estadoSel,
-    opt: estadoApp.optSel,
-    subRol: estadoApp.subRolSel
-  };
-
-  try {
-    const resp = await post(payload);
-    if (resp.exito) {
-      estadoApp.usuarioExiste = resp.existe;
-      
-      // LÓGICA DE BOTONES SEPARADOS
-      if (resp.existe) {
-        ocultar('boxRegistroNuevo');
-        mostrar('boxLoginExistente');
-        ocultar('btnRegistrar');
-        mostrar('btnIngresar');
-        document.getElementById('btnIngresar').textContent = '🔑 Ingresar al Sistema';
-      } else {
-        ocultar('boxLoginExistente');
-        mostrar('boxRegistroNuevo');
-        mostrar('btnRegistrar');
-        ocultar('btnIngresar');
-        document.getElementById('btnRegistrar').textContent = '📝 Registrarse';
-      }
-    } else {
-      Swal.fire('Error', resp.mensaje, 'error');
-    }
-  } catch (e) {
-    Swal.fire('Error de red', 'No se pudo verificar el usuario.', 'error');
-  }
-}
-
-async function registrarUsuario() {
-  const rol = estadoApp.rol;
-  const correo = document.getElementById('inpCorreo').value.trim();
-  const nombre = document.getElementById('inpNombre').value.trim();
-  const cedula = document.getElementById('inpCedula').value.trim();
-  const clave = document.getElementById('inpClaveNueva').value.trim();
-
-  if (!correo || !nombre || !cedula || !clave) {
-    Swal.fire('Atención', 'Complete todos los datos de registro.', 'warning');
-    return;
-  }
-  if (!/^\d{4}$/.test(clave)) {
-    Swal.fire('Atención', 'La clave debe tener exactamente 4 dígitos.', 'warning');
-    return;
-  }
-
-  let payload = { accion: 'loginArbol', rol: rol, correo, nombre, cedula, clave };
-
-  if (rol === 'DIRECCION' || rol === 'COORDINADOR') {
-    payload.subRol = estadoApp.subRolSel;
-    if (rol === 'DIRECCION') payload.usuario = (estadoApp.subRolSel === 'CNC') ? 'Director_CNC' : 'Director_Operaciones';
-  } else if (estadoApp.requiereEstado) {
-    payload.estado = estadoApp.estadoSel;
-  }
-  if (estadoApp.requiereOPT) {
-    payload.codigoOPT = estadoApp.optSel;
-  }
-
-  document.getElementById('btnRegistrar').disabled = true;
-  document.getElementById('btnRegistrar').textContent = 'Registrando...';
-
-  try {
-    const resp = await post(payload);
-    if (!resp.exito) {
-      Swal.fire('Error', resp.mensaje, 'error');
-    } else {
-      Swal.fire('✅ Registrado', 'Usuario creado exitosamente. Ahora puede ingresar.', 'success');
-      verificarUsuario(); 
-    }
-  } catch (err) {
-    Swal.fire('Error de conexión', err.message, 'error');
-  } finally {
-    document.getElementById('btnRegistrar').disabled = false;
-    document.getElementById('btnRegistrar').textContent = '📝 Registrarse';
-  }
-}
-
-async function enviarAlBackend() {
-  const rol = estadoApp.rol;
-  let payload = { accion: 'loginArbol', rol: rol };
-
-  // Solo toma la clave del login existente
-  payload.clave = document.getElementById('inpClave').value.trim();
-
-  if (['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO'].includes(rol)) {
-    if (rol === 'PRESIDENCIA') payload.usuario = 'Presidencia';
-    if (rol === 'DESPACHO') payload.usuario = 'Despacho';
-    if (rol === 'OBSERVATORIO') payload.usuario = 'Observatorio';
-  }
-  else if (rol === 'DIRECCION' || rol === 'COORDINADOR') {
-    payload.subRol = estadoApp.subRolSel;
-    if (rol === 'DIRECCION') payload.usuario = (estadoApp.subRolSel === 'CNC') ? 'Director_CNC' : 'Director_Operaciones';
-  }
-  else if (estadoApp.requiereEstado) {
-    payload.estado = estadoApp.estadoSel;
-  }
-
-  if (estadoApp.requiereOPT) {
-    payload.codigoOPT = estadoApp.optSel;
-  }
-
-  document.getElementById('btnIngresar').disabled = true;
-  document.getElementById('btnIngresar').textContent = 'Validando...';
-
-  try {
-    const resp = await post(payload);
-    if (!resp.exito) {
-      Swal.fire('Acceso denegado', resp.mensaje || 'No autorizado', 'error');
-      document.getElementById('btnIngresar').disabled = false;
-      document.getElementById('btnIngresar').textContent = '🔑 Ingresar al Sistema';
-      return;
-    }
-    redirigir(resp);
-  } catch (err) {
-    Swal.fire('Error de conexión', err.message, 'error');
-    document.getElementById('btnIngresar').disabled = false;
-  }
-}
-    function entrarAlSistema() {
-  document.getElementById('pantallaBienvenida').style.display = 'none';
-  document.getElementById('pantallaLogin').style.display = 'block';
 }
 </script>
 </body>
