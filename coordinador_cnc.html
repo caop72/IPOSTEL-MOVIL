@@ -8,22 +8,27 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #f4f6f9; }
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, sans-serif; }
         .navbar { background-color: #0d1b5e; }
         .navbar-brand, .nav-link { color: white !important; }
+        .oculto { display: none !important; }
     </style>
 </head>
 <body>
 
     <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-shield-check me-2"></i>IPOSTEL - Panel CNC (José)</a>
-            <div class="d-flex">
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-shield-check me-2"></i>IPOSTEL - Panel CNC</a>
+            <div class="d-flex gap-2">
+                <!-- BUSCADOR UNIVERSAL INTEGRADO -->
+                <button class="btn btn-outline-light btn-sm" onclick="buscarPaqueteUniversal()">
+                    <i class="bi bi-search"></i> Buscar Paquete
+                </button>
                 <!-- BOTÓN DE AUDITORÍA MICRO ENTREGAS -->
-                <a href="microentregas.html" class="btn btn-outline-info btn-sm me-2 fw-bold">
+                <a href="microentregas.html" class="btn btn-outline-info btn-sm fw-bold">
                     <i class="bi bi-search"></i> Auditar Entregas OPT
                 </a>
-                <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+                <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Cerrar Sesión</button>
             </div>
         </div>
     </nav>
@@ -78,21 +83,97 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec";
+        const sesion = { usuario: '', rol: '' };
 
-        document.addEventListener('DOMContentLoaded', cargarMasters);
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Validación de sesión
+            const urlParams = new URLSearchParams(window.location.search);
+            sesion.usuario = urlParams.get('u') || sessionStorage.getItem('ipostel_usuario') || '';
+            sesion.rol = (urlParams.get('rol') || sessionStorage.getItem('ipostel_rol') || '').toUpperCase();
+
+            if (!sesion.usuario || sesion.rol !== 'COORD_CNC') {
+                Swal.fire('Acceso Restringido', 'Debe iniciar sesión como Coordinador CNC.', 'warning')
+                    .then(() => window.location.href = 'index.html');
+                return;
+            }
+
+            // 2. Carga inicial
+            cargarMasters();
+        });
+
+        function cerrarSesion() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // ==========================================
+        // BUSCADOR UNIVERSAL DE PAQUETES
+        // ==========================================
+        function buscarPaqueteUniversal() {
+            Swal.fire({
+                title: '🔍 Rastreador de Paquetes',
+                input: 'text',
+                inputLabel: 'Ingrese el código de seguimiento o ID Master',
+                inputPlaceholder: 'Ej: H51D8 o MST-XXXXX',
+                showCancelButton: true,
+                confirmButtonText: 'Buscar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#0d1b5e',
+                inputAttributes: { autocapitalize: 'off', autocomplete: 'off' }
+            }).then(r => {
+                if (r.isConfirmed && r.value) {
+                    Swal.fire({ title: 'Buscando en el sistema...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    
+                    postAPI({ accion: 'buscarPaquete', codigo: r.value.trim() }).then(resp => {
+                        Swal.close();
+                        if (resp.exito && resp.paquete) {
+                            const p = resp.paquete;
+                            let badgeRecepcion = 'bg-secondary';
+                            if (p.estatusRecepcion === 'Pendiente_Recepcion') badgeRecepcion = 'bg-warning text-dark';
+                            else if (p.estatusRecepcion === 'En_Custodia') badgeRecepcion = 'bg-primary';
+                            else if (p.estatusRecepcion === 'Entregado') badgeRecepcion = 'bg-success';
+                            else if (p.estatusRecepcion === 'Extraviado' || p.estatusRecepcion === 'Retrasado') badgeRecepcion = 'bg-danger';
+
+                            Swal.fire({
+                                title: '📦 Resultados: ' + p.codigo,
+                                html: `
+                                    <div class="text-start bg-light p-3 rounded">
+                                        <div class="row g-2">
+                                            <div class="col-6"><small class="text-muted">Estado General:</small><br><span class="badge bg-info text-dark">${p.estatusGeneral}</span></div>
+                                            <div class="col-6"><small class="text-muted">Estado en OPT:</small><br><span class="badge ${badgeRecepcion}">${p.estatusRecepcion}</span></div>
+                                            <div class="col-12"><small class="text-muted">OPT Destino:</small><br><b>${p.optDestino}</b></div>
+                                            <hr class="my-2">
+                                            <div class="col-6"><small class="text-muted">Origen:</small><br>${p.origen}</div>
+                                            <div class="col-6"><small class="text-muted">Destino:</small><br>${p.destino}</div>
+                                            <div class="col-4"><small class="text-muted">Piezas:</small><br><b>${p.piezas}</b></div>
+                                            <div class="col-8"><small class="text-muted">Guía MRW:</small><br>${p.guiaMrw}</div>
+                                        </div>
+                                    </div>
+                                `,
+                                icon: 'success',
+                                confirmButtonColor: '#0d1b5e',
+                                width: '600px'
+                            });
+                        } else {
+                            Swal.fire('No encontrado', resp.mensaje || 'El código no existe en el sistema.', 'warning');
+                        }
+                    }).catch(() => {
+                        Swal.close();
+                        Swal.fire('Error de conexión', 'No se pudo comunicar con el servidor.', 'error');
+                    });
+                }
+            });
+        }
 
         async function cargarMasters() {
             const tbody = document.getElementById('tablaMasters');
             tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Cargando datos...</td></tr>';
 
             try {
-                const response = await fetch(URL_APPS_SCRIPT, {
-                    method: 'POST',
-                    body: new URLSearchParams({ accion: 'obtenerMasters' })
-                });
-                const data = await response.json();
+                const data = await postAPI({ accion: 'obtenerMasters' });
 
                 if (data.exito) {
                     tbody.innerHTML = '';
@@ -100,24 +181,30 @@
 
                     if (data.masters.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay Masters registrados.</td></tr>';
+                        return;
                     }
 
                     data.masters.forEach(m => {
                         total++;
-                        if (m.estatus === 'Cerrado') cerrados++;
-                        else pendientes++;
+                        if (m.estatus === 'Cerrado' || m.estatus === 'Ciclo Cerrado') {
+                            cerrados++;
+                        } else {
+                            pendientes++;
+                        }
+
+                        const esCerrado = (m.estatus === 'Cerrado' || m.estatus === 'Ciclo Cerrado');
 
                         tbody.innerHTML += `
                             <tr>
                                 <td class="fw-bold">${m.id}</td>
                                 <td>${m.origen} <i class="bi bi-arrow-right"></i> ${m.destino}</td>
                                 <td>${m.piezas}</td>
-                                <td><span class="badge bg-secondary">${m.estatus}</span></td>
+                                <td><span class="badge ${esCerrado ? 'bg-success' : 'bg-secondary'}">${m.estatus}</span></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-info me-1" onclick="verClasificacion('${m.id}')">
                                         <i class="bi bi-diagram-3"></i> Ver Clasificación
                                     </button>
-                                    ${m.estatus !== 'Cerrado' ? `
+                                    ${!esCerrado ? `
                                     <button class="btn btn-sm btn-outline-success" onclick="cerrarMaster('${m.id}')">
                                         <i class="bi bi-check-circle"></i> Cerrar
                                     </button>` : ''}
@@ -129,6 +216,8 @@
                     document.getElementById('totalMasters').textContent = total;
                     document.getElementById('pendientesCierre').textContent = pendientes;
                     document.getElementById('cerradosOK').textContent = cerrados;
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">${data.mensaje}</td></tr>`;
                 }
             } catch (error) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
@@ -138,33 +227,67 @@
         async function verClasificacion(idMaster) {
             Swal.fire({ title: 'Cargando clasificación...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const response = await fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'obtenerClasificacionMaster', idMaster: idMaster }) });
-                const data = await response.json();
+                // CORREGIDO: Se usa la acción 'obtenerClasificacionOPT' que existe en el router del backend
+                const data = await postAPI({ accion: 'obtenerClasificacionOPT', idMaster: idMaster });
 
-                if (data.exito && data.clasificacion.length > 0) {
-                    let html = `<h6 class="text-start mb-3">Master: <b>${idMaster}</b></h6><table class="table table-sm table-bordered text-start"><thead class="table-light"><tr><th>OPT</th><th>Piezas</th><th>Estatus</th></tr></thead><tbody>`;
+                if (data.exito && data.clasificacion && data.clasificacion.length > 0) {
+                    let html = `<h6 class="text-start mb-3">Master: <b>${idMaster}</b></h6>
+                                <table class="table table-sm table-bordered text-start">
+                                    <thead class="table-light">
+                                        <tr><th>OPT</th><th>Piezas</th><th>Estatus</th></tr>
+                                    </thead>
+                                    <tbody>`;
                     data.clasificacion.forEach(c => {
-                        let badge = c.estatus === 'Entregado_Final' ? 'bg-success' : 'bg-warning text-dark';
-                        html += `<tr><td>${c.opt}</td><td>${c.piezas}</td><td><span class="badge ${badge}">${c.estatus}</span></td></tr>`;
+                        let badge = c.estatus === 'Entregado_Final' || c.estatus === 'Entregado' ? 'bg-success' : 'bg-warning text-dark';
+                        html += `<tr><td>${c.opt || c.codigoOPT}</td><td>${c.piezas}</td><td><span class="badge ${badge}">${c.estatus}</span></td></tr>`;
                     });
                     html += `</tbody></table>`;
                     Swal.fire({ title: 'Clasificación por OPT', html: html, width: '600px' });
                 } else {
-                    Swal.fire('Sin datos', 'Este Master aún no ha sido clasificado por el Gerente de Estado.', 'info');
+                    Swal.fire('Sin datos', 'Este Master aún no ha sido clasificado o no hay datos disponibles.', 'info');
                 }
-            } catch (error) { Swal.fire('Error', 'No se pudo cargar la clasificación.', 'error'); }
+            } catch (error) { 
+                Swal.fire('Error', 'No se pudo cargar la clasificación.', 'error'); 
+            }
         }
 
         async function cerrarMaster(idMaster) {
-            const confirm = await Swal.fire({ title: '¿Cerrar Master?', text: "Esta acción indica que el proceso ha finalizado por completo.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#198754', confirmButtonText: 'Sí, cerrar' });
+            const confirm = await Swal.fire({ 
+                title: '¿Cerrar Master?', 
+                text: "Esta acción indica que el proceso ha finalizado por completo.", 
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#198754', 
+                confirmButtonText: 'Sí, cerrar' 
+            });
+            
             if (confirm.isConfirmed) {
                 Swal.fire({ title: 'Cerrando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                fetch(URL_APPS_SCRIPT, { method: 'POST', body: new URLSearchParams({ accion: 'cerrarMasterCNC', idMaster: idMaster }) })
-                .then(res => res.json()).then(resp => {
-                    if (resp.exito) { Swal.fire('¡Cerrado!', 'El Master ha sido cerrado exitosamente.', 'success'); cargarMasters(); } 
-                    else { Swal.fire('Error', resp.mensaje, 'error'); }
-                }).catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
+                try {
+                    // CORREGIDO: Se usa la acción 'cerrarCiclo' que existe en el router del backend
+                    const resp = await postAPI({ accion: 'cerrarCiclo', idMaster: idMaster });
+                    
+                    if (resp.exito) { 
+                        Swal.fire('¡Cerrado!', 'El Master ha sido cerrado exitosamente.', 'success'); 
+                        cargarMasters(); 
+                    } else { 
+                        Swal.fire('Error', resp.mensaje, 'error'); 
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                }
             }
+        }
+
+        // ==========================================
+        // UTILIDAD ESTÁNDAR DE PETICIONES (JSON)
+        // ==========================================
+        function postAPI(payload) {
+            return fetch(API_URL, { 
+                method: 'POST', 
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(r => r.json());
         }
     </script>
 </body>
