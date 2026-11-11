@@ -42,8 +42,13 @@ body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, sans-serif; }
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="#"><i class="bi bi-shield-lock me-2"></i>IPOSTEL - Portal OPT</a>
     <div class="d-flex gap-2">
-      <button class="btn btn-outline-light btn-sm" onclick="buscarRuta()"><i class="bi bi-search"></i> Buscar Ruta</button>
-      <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()"><i class="bi bi-box-arrow-right"></i> Salir</button>
+      <!-- BOTÓN DE BÚSQUEDA UNIVERSAL INTEGRADO -->
+      <button class="btn btn-outline-light btn-sm" onclick="buscarPaqueteUniversal()">
+        <i class="bi bi-search"></i> Buscar Paquete
+      </button>
+      <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">
+        <i class="bi bi-box-arrow-right"></i> Salir
+      </button>
     </div>
   </div>
 </nav>
@@ -148,38 +153,39 @@ body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, sans-serif; }
         </div>
       </div>
     </div>
+
     <!-- ============ VECTOR 5: CUSTODIA CON SEMÁFORO SLA + INCIDENCIAS ============ -->
-<div class="tab-pane fade" id="tab-custodia" role="tabpanel">
-  <div class="card shadow-sm card-vector vector-custodia">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-      <div>
-        <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-box-seam me-2"></i>Paquetes en Custodia (Listos para Entrega)</h5>
-        <small class="text-muted">Inventario físico en taquilla. Semáforo SLA: 🟢 0-3 días | 🟡 4-7 días | 🔴 8-14 días | ⚫ +15 días (solo devolución)</small>
+    <div class="tab-pane fade" id="tab-custodia" role="tabpanel">
+      <div class="card shadow-sm card-vector vector-custodia">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+          <div>
+            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-box-seam me-2"></i>Paquetes en Custodia (Listos para Entrega)</h5>
+            <small class="text-muted">Inventario físico en taquilla. Semáforo SLA: 🟢 0-3 días | 🟡 4-7 días | 🔴 8-14 días | ⚫ +15 días (solo devolución)</small>
+          </div>
+          <button class="btn btn-primary btn-sm fw-bold" onclick="cargarCustodia()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Destinatario Original</th>
+                  <th>Piezas</th>
+                  <th>Fecha Recepción</th>
+                  <th>Días en Custodia</th>
+                  <th>SLA</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaCustodia">
+                <tr><td colspan="7" class="text-center py-4">Cargando inventario...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <button class="btn btn-primary btn-sm fw-bold" onclick="cargarCustodia()"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
     </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Destinatario Original</th>
-              <th>Piezas</th>
-              <th>Fecha Recepción</th>
-              <th>Días en Custodia</th>
-              <th>SLA</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tablaCustodia">
-            <tr><td colspan="7" class="text-center py-4">Cargando inventario...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
 
     <!-- ============ VECTOR 6: DESPACHO DESDE LA OPT ============ -->
     <div class="tab-pane fade" id="tab-despacho" role="tabpanel">
@@ -488,51 +494,58 @@ function cerrarSesion() {
   window.location.href = 'index.html';
 }
 
-function buscarRuta() {
+// ==========================================
+// BUSCADOR UNIVERSAL DE PAQUETES
+// ==========================================
+function buscarPaqueteUniversal() {
   Swal.fire({
-    title: 'Buscar Paquete',
+    title: '🔍 Rastreador de Paquetes',
     input: 'text',
-    inputLabel: 'Código de seguimiento',
+    inputLabel: 'Ingrese el código de seguimiento',
     inputPlaceholder: 'Ej: H51D8',
     showCancelButton: true,
     confirmButtonText: 'Buscar',
-    confirmButtonColor: '#0d1b5e'
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#0d1b5e',
+    inputAttributes: { autocapitalize: 'off', autocomplete: 'off' }
   }).then(r => {
     if (r.isConfirmed && r.value) {
-      // Mostrar indicador de carga
-      Swal.fire({
-        title: 'Buscando...',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-      });
+      Swal.fire({ title: 'Buscando en el sistema...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       
-      postAPI({accion: 'buscarPaquete', codigo: r.value}).then(resp => {
-        Swal.close(); // Cerrar indicador de carga
-        
+      postAPI({ accion: 'buscarPaquete', codigo: r.value.trim() }).then(resp => {
+        Swal.close();
         if (resp.exito && resp.paquete) {
-          const p = resp.paquete; // Aquí está el objeto con los datos correctos
-          
+          const p = resp.paquete;
+          let badgeRecepcion = 'bg-secondary';
+          if (p.estatusRecepcion === 'Pendiente_Recepcion') badgeRecepcion = 'bg-warning text-dark';
+          else if (p.estatusRecepcion === 'En_Custodia') badgeRecepcion = 'bg-primary';
+          else if (p.estatusRecepcion === 'Entregado') badgeRecepcion = 'bg-success';
+          else if (p.estatusRecepcion === 'Extraviado' || p.estatusRecepcion === 'Retrasado') badgeRecepcion = 'bg-danger';
+
           Swal.fire({
-            title: '📦 Paquete: ' + p.codigo,
+            title: '📦 Resultados: ' + p.codigo,
             html: `
-              <div class="text-start">
-                <p class="mb-1"><b>Estado General:</b> <span class="badge bg-info">${p.estatusGeneral}</span></p>
-                <p class="mb-1"><b>OPT Destino:</b> ${p.optDestino}</p>
-                <p class="mb-1"><b>Estado Recepción:</b> <span class="badge bg-warning text-dark">${p.estatusRecepcion}</span></p>
-                <hr>
-                <p class="mb-1"><b>Origen:</b> ${p.origen}</p>
-                <p class="mb-1"><b>Destino:</b> ${p.destino}</p>
-                <p class="mb-1"><b>Piezas:</b> ${p.piezas}</p>
-                <p class="mb-0"><b>Guía MRW:</b> ${p.guiaMrw}</p>
+              <div class="text-start bg-light p-3 rounded">
+                <div class="row g-2">
+                  <div class="col-6"><small class="text-muted">Estado General:</small><br><span class="badge bg-info text-dark">${p.estatusGeneral}</span></div>
+                  <div class="col-6"><small class="text-muted">Estado en OPT:</small><br><span class="badge ${badgeRecepcion}">${p.estatusRecepcion}</span></div>
+                  <div class="col-12"><small class="text-muted">OPT Destino:</small><br><b>${p.optDestino}</b></div>
+                  <hr class="my-2">
+                  <div class="col-6"><small class="text-muted">Origen:</small><br>${p.origen}</div>
+                  <div class="col-6"><small class="text-muted">Destino:</small><br>${p.destino}</div>
+                  <div class="col-4"><small class="text-muted">Piezas:</small><br><b>${p.piezas}</b></div>
+                  <div class="col-8"><small class="text-muted">Guía MRW:</small><br>${p.guiaMrw}</div>
+                </div>
               </div>
             `,
             icon: 'success',
-            confirmButtonColor: '#0d1b5e'
+            confirmButtonColor: '#0d1b5e',
+            width: '600px'
           });
         } else {
           Swal.fire('No encontrado', resp.mensaje || 'El código no existe en el sistema.', 'warning');
         }
-      }).catch(err => {
+      }).catch(() => {
         Swal.close();
         Swal.fire('Error de conexión', 'No se pudo comunicar con el servidor.', 'error');
       });
@@ -634,7 +647,6 @@ async function cargarCustodia() {
         return;
       }
       resp.paquetes.forEach(p => {
-        // SEMÁFORO SLA
         let badgeSLA, textoSLA, claseFila, botonesAccion;
         
         if (p.dias <= 3) {
@@ -647,20 +659,12 @@ async function cargarCustodia() {
           badgeSLA = 'bg-dark'; textoSLA = '⚫ Vencido'; claseFila = 'fila-critica';
         }
 
-        // BOTONES: Si está vencido (+15 días), solo permite devolución
         if (p.dias > 14) {
-          botonesAccion = `
-            <button class="btn btn-sm btn-dark fw-bold" onclick='abrirModalIncidencia(${JSON.stringify(p)}, "DEVOLUCION")' title="Superó 15 días, debe devolverse">
-              <i class="bi bi-arrow-return-left"></i> Devolver
-            </button>`;
+          botonesAccion = `<button class="btn btn-sm btn-dark fw-bold" onclick='abrirModalIncidencia("${p.codigo}", "DEVOLUCION")' title="Superó 15 días, debe devolverse"><i class="bi bi-arrow-return-left"></i> Devolver</button>`;
         } else {
           botonesAccion = `
-            <button class="btn btn-sm btn-primary fw-bold me-1" onclick='abrirModalEntregaUPAE(${JSON.stringify(p)})'>
-              <i class="bi bi-person-check"></i> Entregar
-            </button>
-            <button class="btn btn-sm btn-outline-danger" onclick='abrirModalIncidencia(${JSON.stringify(p)}, "RECHAZO")' title="Rechazo por daño o incidencia">
-              <i class="bi bi-exclamation-triangle"></i>
-            </button>`;
+            <button class="btn btn-sm btn-primary fw-bold me-1" onclick='abrirModalEntregaUPAE(${JSON.stringify(p)})'><i class="bi bi-person-check"></i> Entregar</button>
+            <button class="btn btn-sm btn-outline-danger" onclick='abrirModalIncidencia("${p.codigo}", "RECHAZO")' title="Rechazo por daño o incidencia"><i class="bi bi-exclamation-triangle"></i></button>`;
         }
 
         tbody.innerHTML += `
@@ -678,6 +682,41 @@ async function cargarCustodia() {
   } catch (e) {
     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Error al cargar.</td></tr>';
   }
+}
+
+// ==========================================
+// FUNCIÓN AGREGADA PARA EVITAR ERROR EN CUSTODIA
+// ==========================================
+function abrirModalIncidencia(codigo, tipo) {
+  Swal.fire({
+    title: tipo === 'DEVOLUCION' ? '🔄 Procesar Devolución' : '⚠️ Registrar Incidencia',
+    input: 'textarea',
+    inputLabel: 'Motivo de la ' + (tipo === 'DEVOLUCION' ? 'Devolución' : 'Incidencia'),
+    inputPlaceholder: 'Describa el motivo detalladamente...',
+    showCancelButton: true,
+    confirmButtonText: 'Confirmar',
+    confirmButtonColor: tipo === 'DEVOLUCION' ? '#212529' : '#dc3545'
+  }).then(r => {
+    if (r.isConfirmed && r.value) {
+      Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      postAPI({
+        accion: 'gestionarIncidenciaOPT',
+        codigo: codigo,
+        tipoIncidencia: tipo,
+        motivo: r.value,
+        usuario: sesionOPT.usuario
+      }).then(resp => {
+        if (resp.exito) {
+          Swal.fire('✅ Registrado', 'La incidencia/devolución ha sido registrada.', 'success');
+          cargarCustodia();
+        } else {
+          Swal.fire('Error', resp.mensaje, 'error');
+        }
+      }).catch(() => {
+        Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+      });
+    }
+  });
 }
 
 function abrirModalEntregaUPAE(paquete) {
@@ -822,11 +861,11 @@ async function cargarHistorialEntregas() {
     const resp = await postAPI({ accion: 'obtenerHistorialEntregasOPT', opt: sesionOPT.opt });
     if (resp.exito) {
       tbody.innerHTML = '';
-      if (resp.entregas.length === 0) {
+      if (resp.historial.length === 0) { // Corregido: el backend devuelve 'historial', no 'entregas'
         tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">No hay entregas registradas.</td></tr>';
         return;
       }
-      resp.entregas.forEach(e => {
+      resp.historial.forEach(e => {
         let badge = 'bg-success';
         if (e.estadoPaquete === 'Abierto' || e.estadoPaquete === 'Danado') badge = 'bg-danger';
         else if (e.estadoPaquete === 'Faltante') badge = 'bg-warning text-dark';
