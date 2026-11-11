@@ -344,14 +344,21 @@ async function verificarUsuario() {
     const resp = await post(payload);
     if (resp.exito) {
       estadoApp.usuarioExiste = resp.existe;
+      
+      // LÓGICA DE BOTONES SEPARADOS
       if (resp.existe) {
+        ocultar('boxRegistroNuevo');
         mostrar('boxLoginExistente');
-        document.getElementById('btnIngresar').textContent = 'Ingresar al Sistema';
+        ocultar('btnRegistrar');
+        mostrar('btnIngresar');
+        document.getElementById('btnIngresar').textContent = '🔑 Ingresar al Sistema';
       } else {
+        ocultar('boxLoginExistente');
         mostrar('boxRegistroNuevo');
-        document.getElementById('btnIngresar').textContent = 'Registrarse e Ingresar';
+        mostrar('btnRegistrar');
+        ocultar('btnIngresar');
+        document.getElementById('btnRegistrar').textContent = '📝 Registrarse';
       }
-      mostrar('btnIngresar');
     } else {
       Swal.fire('Error', resp.mensaje, 'error');
     }
@@ -359,7 +366,6 @@ async function verificarUsuario() {
     Swal.fire('Error de red', 'No se pudo verificar el usuario.', 'error');
   }
 }
-
 function volverAtras() {
   if (!document.getElementById('pasoCredenciales').classList.contains('oculto')) {
     document.getElementById('pasoCredenciales').classList.add('oculto');
