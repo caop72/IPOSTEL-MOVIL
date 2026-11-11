@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IPOSTEL Móvil — Bienvenido</title>
-<!-- CORREGIDO: Etiqueta link de Bootstrap -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
@@ -160,7 +159,6 @@
 </div>
 
 <script>
-// 🔥 AQUÍ ESTÁ LA NUEVA URL INTEGRADA
 const API_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
 
 const estadoApp = {
@@ -190,8 +188,11 @@ function mostrar(id) {
 }
 
 function entrarAlSistema() {
-  document.getElementById('pantallaBienvenida').style.display = 'none';
-  document.getElementById('pantallaLogin').style.display = 'block';
+  document.getElementById('pantallaBienvenida').style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('pantallaBienvenida').style.display = 'none';
+    document.getElementById('pantallaLogin').style.display = 'block';
+  }, 600);
 }
 
 function cambiarRol() {
@@ -289,7 +290,7 @@ async function verificarUsuario() {
   };
 
   try {
-    const resp = await post(payload);
+    const resp = await postAPI(payload);
     if (resp.exito) {
       estadoApp.usuarioExiste = resp.existe;
       
@@ -342,11 +343,12 @@ async function registrarUsuario() {
     payload.codigoOPT = estadoApp.optSel;
   }
 
-  document.getElementById('btnRegistrar').disabled = true;
-  document.getElementById('btnRegistrar').textContent = 'Registrando...';
+  const btn = document.getElementById('btnRegistrar');
+  btn.disabled = true;
+  btn.textContent = 'Registrando...';
 
   try {
-    const resp = await post(payload);
+    const resp = await postAPI(payload);
     if (!resp.exito) {
       Swal.fire('Error', resp.mensaje, 'error');
     } else {
@@ -356,8 +358,8 @@ async function registrarUsuario() {
   } catch (err) {
     Swal.fire('Error de conexión', err.message, 'error');
   } finally {
-    document.getElementById('btnRegistrar').disabled = false;
-    document.getElementById('btnRegistrar').textContent = '📝 Registrarse';
+    btn.disabled = false;
+    btn.textContent = '📝 Registrarse';
   }
 }
 
@@ -383,29 +385,34 @@ async function enviarAlBackend() {
     payload.codigoOPT = estadoApp.optSel;
   }
 
-  document.getElementById('btnIngresar').disabled = true;
-  document.getElementById('btnIngresar').textContent = 'Validando...';
+  const btn = document.getElementById('btnIngresar');
+  btn.disabled = true;
+  btn.textContent = 'Validando...';
 
   try {
-    const resp = await post(payload);
+    const resp = await postAPI(payload);
     if (!resp.exito) {
       Swal.fire('Acceso denegado', resp.mensaje || 'No autorizado', 'error');
-      document.getElementById('btnIngresar').disabled = false;
-      document.getElementById('btnIngresar').textContent = '🔑 Ingresar al Sistema';
+      btn.disabled = false;
+      btn.textContent = '🔑 Ingresar al Sistema';
       return;
     }
     redirigir(resp);
   } catch (err) {
     Swal.fire('Error de conexión', err.message, 'error');
-    document.getElementById('btnIngresar').disabled = false;
+    btn.disabled = false;
+    btn.textContent = '🔑 Ingresar al Sistema';
   }
 }
 
 function redirigir(r) {
   const rol = r.rol || estadoApp.rol;
   const usuario = r.usuario || '';
+  
   sessionStorage.setItem('ipostel_rol', rol);
   sessionStorage.setItem('ipostel_usuario', usuario);
+  if (estadoApp.estadoSel) sessionStorage.setItem('ipostel_estado', estadoApp.estadoSel);
+  if (estadoApp.optSel) sessionStorage.setItem('ipostel_opt', estadoApp.optSel);
 
   const rutas = {
     PRESIDENCIA: 'observatorio.html', DESPACHO: 'observatorio.html', OBSERVATORIO: 'observatorio.html',
@@ -413,8 +420,18 @@ function redirigir(r) {
     GERENTE_ESTADO: 'estados.html', COORD_ENCAM: 'encaminamiento.html', COORD_ALIANZA: 'seguimiento.html',
     COORD_CNC: 'coordinador_cnc.html', JEFE_OPT: 'portal_opt.html', ANALISTA_OPT: 'portal_opt.html'
   };
-  const pantalla = r.pantalla || rutas[rol] || 'observatorio.html';
-  window.location.replace(pantalla + (pantalla.includes('?') ? '&' : '?') + 'u=' + encodeURIComponent(usuario) + '&rol=' + encodeURIComponent(rol));
+  
+  let pantalla = r.pantalla || rutas[rol] || 'observatorio.html';
+  
+  // Construir parámetros de URL dinámicamente
+  const params = new URLSearchParams();
+  params.append('u', usuario);
+  params.append('rol', rol);
+  if (estadoApp.estadoSel) params.append('estado', estadoApp.estadoSel);
+  if (estadoApp.optSel) params.append('opt', estadoApp.optSel);
+
+  const urlFinal = pantalla + '?' + params.toString();
+  window.location.replace(urlFinal);
 }
 
 function volverAtras() {
@@ -447,7 +464,7 @@ function volverAtras() {
 }
 
 function cargarEstados() {
-  post({accion: 'obtenerEstados'}).then(r => {
+  postAPI({accion: 'obtenerEstados'}).then(r => {
     if (r.exito) {
       const sel = document.getElementById('selEstado');
       sel.innerHTML = '<option value="">-- Seleccione Estado --</option>';
@@ -457,7 +474,7 @@ function cargarEstados() {
 }
 
 function cargarOPTs(estado) {
-  post({accion: 'obtenerOPTsPorEstado', estado: estado}).then(r => {
+  postAPI({accion: 'obtenerOPTsPorEstado', estado: estado}).then(r => {
     if (r.exito) {
       const sel = document.getElementById('selOPT');
       sel.innerHTML = '<option value="">-- Seleccione OPT --</option>';
@@ -470,19 +487,28 @@ function cargarOPTs(estado) {
 function recuperar() {
   Swal.fire({
     title: 'Recuperar clave', input: 'email', inputLabel: 'Escriba su correo registrado',
-    inputPlaceholder: 'correo@ipostel.gob.ve', showCancelButton: true
+    inputPlaceholder: 'correo@ipostel.gob.ve', showCancelButton: true, confirmButtonColor: '#0d1b5e'
   }).then(res => {
     if (res.isConfirmed && res.value) {
-      post({ accion: 'recuperarClave', correo: res.value }).then(r => {
+      Swal.fire({ title: 'Enviando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      postAPI({ accion: 'recuperarClave', correo: res.value }).then(r => {
+        Swal.close();
         if (r.exito) Swal.fire('📧 Enviada', r.mensaje, 'success');
         else Swal.fire('No encontrado', r.mensaje, 'warning');
-      });
+      }).catch(() => Swal.fire('Error', 'No se pudo conectar.', 'error'));
     }
   });
 }
 
-function post(payload) {
-  return fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
+// ==========================================
+// UTILIDAD ESTÁNDAR DE PETICIONES (JSON)
+// ==========================================
+function postAPI(payload) {
+  return fetch(API_URL, { 
+    method: 'POST', 
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+  }).then(r => r.json());
 }
 </script>
 </body>
