@@ -22,7 +22,7 @@
     background-color: #f4f6f9;
   }
 
-  /* PANTALLA DE BIENVENIDA */
+  /* PANTALLA DE BIENVENIDA (Azul con letras plateadas) */
   #pantallaBienvenida {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -121,7 +121,6 @@
   <h1>IPOSTEL Móvil</h1>
   <p>Control y tracking vectorial de despachos</p>
   <button class="btn btn-bienvenida" onclick="entrarAlSistema()">Ingresar</button>
-     <p style="color: red; font-weight: bold;">PRUEBA: SI VES ESTO, EL HTML SE ACTUALIZÓ</p>
 </div>
 
 <!-- PANTALLA DE LOGIN -->
@@ -148,7 +147,7 @@
       </select>
     </div>
 
-    <!-- PASO 2: SUB-Rol -->
+    <!-- PASO 2: SUB-Rol (Dirección / Coordinador) -->
     <div id="pasoSubRol" class="mb-3 oculto">
       <label class="form-label">Seleccione opción</label>
       <select id="selSubRol" class="form-select" onchange="verificarUsuario()">
@@ -172,16 +171,16 @@
       </select>
     </div>
 
-    <!-- PASO 5: CREDENCIALES -->
+    <!-- PASO 5: CREDENCIALES (Login o Registro) -->
     <div id="pasoCredenciales" class="oculto">
       
-      <!-- 5A. LOGIN EXISTENTE -->
+      <!-- 5A. LOGIN EXISTENTE (Solo Clave) -->
       <div id="boxLoginExistente" class="mb-3 box-clave oculto">
         <label class="form-label">Clave de Acceso</label>
         <input id="inpClave" type="password" class="form-control" placeholder="••••">
       </div>
 
-      <!-- 5B. REGISTRO NUEVO -->
+      <!-- 5B. REGISTRO NUEVO (Todos los datos) -->
       <div id="boxRegistroNuevo" class="mb-3 p-3 bg-light rounded border oculto">
         <h6 class="text-primary mb-3 fw-bold">Datos de Registro</h6>
         <div class="mb-2">
@@ -219,6 +218,7 @@
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
 
+// Estado global
 const estadoApp = {
   rol: null,
   requiereEstado: false,
@@ -386,4 +386,111 @@ function volverAtras() {
     return;
   }
   document.getElementById('selRol').value = '';
-  cambiarRol
+  cambiarRol();
+}
+
+function cargarEstados() {
+  post({accion: 'obtenerEstados'}).then(r => {
+    if (r.exito) {
+      const sel = document.getElementById('selEstado');
+      sel.innerHTML = '<option value="">-- Seleccione Estado --</option>';
+      r.estados.forEach(e => sel.innerHTML += `<option value="${e}">${e}</option>`);
+    }
+  });
+}
+
+function cargarOPTs(estado) {
+  post({accion: 'obtenerOPTsPorEstado', estado: estado}).then(r => {
+    if (r.exito) {
+      const sel = document.getElementById('selOPT');
+      sel.innerHTML = '<option value="">-- Seleccione OPT --</option>';
+      r.opts.forEach(o => sel.innerHTML += `<option value="${o.codigo}">${o.nombre}</option>`);
+      mostrar('pasoOPT');
+    }
+  });
+}
+
+async function enviarAlBackend() {
+  const rol = estadoApp.rol;
+  let payload = { accion: 'loginArbol', rol: rol };
+
+  if (estadoApp.usuarioExiste) {
+    payload.clave = document.getElementById('inpClave').value.trim();
+  } else {
+    payload.correo = document.getElementById('inpCorreo').value.trim();
+    payload.nombre = document.getElementById('inpNombre').value.trim();
+    payload.cedula = document.getElementById('inpCedula').value.trim();
+    payload.clave = document.getElementById('inpClaveNueva').value.trim();
+  }
+
+  if (['PRESIDENCIA', 'DESPACHO', 'OBSERVATORIO'].includes(rol)) {
+    if (rol === 'PRESIDENCIA') payload.usuario = 'Presidencia';
+    if (rol === 'DESPACHO') payload.usuario = 'Despacho';
+    if (rol === 'OBSERVATORIO') payload.usuario = 'Observatorio';
+  }
+  else if (rol === 'DIRECCION' || rol === 'COORDINADOR') {
+    payload.subRol = estadoApp.subRolSel;
+    if (rol === 'DIRECCION') payload.usuario = (estadoApp.subRolSel === 'CNC') ? 'Director_CNC' : 'Director_Operaciones';
+  }
+  else if (estadoApp.requiereEstado) {
+    payload.estado = estadoApp.estadoSel;
+  }
+
+  if (estadoApp.requiereOPT) {
+    payload.codigoOPT = estadoApp.optSel;
+  }
+
+  document.getElementById('btnIngresar').disabled = true;
+  document.getElementById('btnIngresar').textContent = 'Validando...';
+
+  try {
+    const resp = await post(payload);
+    if (!resp.exito) {
+      Swal.fire('Acceso denegado', resp.mensaje || 'No autorizado', 'error');
+      document.getElementById('btnIngresar').disabled = false;
+      document.getElementById('btnIngresar').textContent = estadoApp.usuarioExiste ? 'Ingresar al Sistema' : 'Registrarse e Ingresar';
+      return;
+    }
+    redirigir(resp);
+  } catch (err) {
+    Swal.fire('Error de conexión', err.message, 'error');
+    document.getElementById('btnIngresar').disabled = false;
+  }
+}
+
+function redirigir(r) {
+  const rol = r.rol || estadoApp.rol;
+  const usuario = r.usuario || '';
+  sessionStorage.setItem('ipostel_rol', rol);
+  sessionStorage.setItem('ipostel_usuario', usuario);
+
+  const rutas = {
+    PRESIDENCIA: 'observatorio.html', DESPACHO: 'observatorio.html', OBSERVATORIO: 'observatorio.html',
+    DIR_CNC: 'microentregas.html', DIR_OPER: 'observatorio.html',
+    GERENTE_ESTADO: 'estados.html', COORD_ENCAM: 'encaminamiento.html', COORD_ALIANZA: 'seguimiento.html',
+    COORD_CNC: 'coordinador_cnc.html', JEFE_OPT: 'portal_opt.html', ANALISTA_OPT: 'portal_opt.html'
+  };
+  const pantalla = r.pantalla || rutas[rol] || 'observatorio.html';
+  window.location.replace(pantalla + (pantalla.includes('?') ? '&' : '?') + 'u=' + encodeURIComponent(usuario) + '&rol=' + encodeURIComponent(rol));
+}
+
+function recuperar() {
+  Swal.fire({
+    title: 'Recuperar clave', input: 'email', inputLabel: 'Escriba su correo registrado',
+    inputPlaceholder: 'correo@ipostel.gob.ve', showCancelButton: true
+  }).then(res => {
+    if (res.isConfirmed && res.value) {
+      post({ accion: 'recuperarClave', correo: res.value }).then(r => {
+        if (r.exito) Swal.fire('📧 Enviada', r.mensaje, 'success');
+        else Swal.fire('No encontrado', r.mensaje, 'warning');
+      });
+    }
+  });
+}
+
+function post(payload) {
+  return fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }).then(r => r.json());
+}
+</script>
+</body>
+</html>
