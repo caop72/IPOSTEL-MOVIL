@@ -493,18 +493,48 @@ function buscarRuta() {
     title: 'Buscar Paquete',
     input: 'text',
     inputLabel: 'Código de seguimiento',
-    inputPlaceholder: 'Ej: DL6B2',
+    inputPlaceholder: 'Ej: H51D8',
     showCancelButton: true,
     confirmButtonText: 'Buscar',
     confirmButtonColor: '#0d1b5e'
   }).then(r => {
     if (r.isConfirmed && r.value) {
+      // Mostrar indicador de carga
+      Swal.fire({
+        title: 'Buscando...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+      
       postAPI({accion: 'buscarPaquete', codigo: r.value}).then(resp => {
+        Swal.close(); // Cerrar indicador de carga
+        
         if (resp.exito && resp.paquete) {
-          Swal.fire('📦 ' + resp.paquete.codigo, `<b>Estatus:</b> ${resp.paquete.estatus}<br><b>OPT:</b> ${resp.paquete.opt}`, 'info');
+          const p = resp.paquete; // Aquí está el objeto con los datos correctos
+          
+          Swal.fire({
+            title: '📦 Paquete: ' + p.codigo,
+            html: `
+              <div class="text-start">
+                <p class="mb-1"><b>Estado General:</b> <span class="badge bg-info">${p.estatusGeneral}</span></p>
+                <p class="mb-1"><b>OPT Destino:</b> ${p.optDestino}</p>
+                <p class="mb-1"><b>Estado Recepción:</b> <span class="badge bg-warning text-dark">${p.estatusRecepcion}</span></p>
+                <hr>
+                <p class="mb-1"><b>Origen:</b> ${p.origen}</p>
+                <p class="mb-1"><b>Destino:</b> ${p.destino}</p>
+                <p class="mb-1"><b>Piezas:</b> ${p.piezas}</p>
+                <p class="mb-0"><b>Guía MRW:</b> ${p.guiaMrw}</p>
+              </div>
+            `,
+            icon: 'success',
+            confirmButtonColor: '#0d1b5e'
+          });
         } else {
-          Swal.fire('No encontrado', 'El código no existe en el sistema.', 'info');
+          Swal.fire('No encontrado', resp.mensaje || 'El código no existe en el sistema.', 'warning');
         }
+      }).catch(err => {
+        Swal.close();
+        Swal.fire('Error de conexión', 'No se pudo comunicar con el servidor.', 'error');
       });
     }
   });
