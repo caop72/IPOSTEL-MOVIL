@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPOSTEL - Seguimiento y Control</title>
+    <title>IPOSTEL - Seguimiento y Control (Alianzas)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #f4f6f9; }
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, sans-serif; }
         .navbar { background-color: #0d1b5e; }
         .navbar-brand, .nav-link { color: white !important; }
         .card-semaforo { border-left: 5px solid; cursor: pointer; transition: transform 0.2s; }
@@ -22,19 +22,22 @@
         .timeline li::before { content: ''; position: absolute; left: 0; top: 0; width: 15px; height: 15px; border-radius: 50%; background-color: #0d1b5e; }
         .timeline li::after { content: ''; position: absolute; left: 7px; top: 15px; bottom: -20px; width: 2px; background-color: #dee2e6; }
         .timeline li:last-child::after { display: none; }
+        .oculto { display: none !important; }
     </style>
 </head>
 <body>
 
     <nav class="navbar navbar-expand-lg mb-4 shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-truck me-2"></i>IPOSTEL - Seguimiento y Control (Alfredo)</a>
-            <div class="d-flex">
-                <!-- BOTÓN PARA ENLAZAR MRW -->
-                <button class="btn btn-warning btn-sm me-2 fw-bold text-dark" onclick="abrirEnlaceMRW()">
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-truck me-2"></i>IPOSTEL - Control de Alianzas</a>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-light btn-sm" onclick="buscarPaqueteUniversal()">
+                    <i class="bi bi-search"></i> Buscar Paquete
+                </button>
+                <button class="btn btn-warning btn-sm fw-bold text-dark" onclick="abrirEnlaceMRW()">
                     <i class="bi bi-link-45deg"></i> Enlazar Guías MRW
                 </button>
-                <a href="index.html" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+                <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Cerrar Sesión</button>
             </div>
         </div>
     </nav>
@@ -140,14 +143,25 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS (necesario para el modal) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwwHyTTBHUhyG0SVqunm9hvkBMTaaQlR4xs5jbD_j8E4NRcu3YjcKG6W9WnW4DU8ZIOmA/exec';
         let modalTimeline;
+        const sesion = { usuario: '', rol: '' };
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Validación de sesión básica
+            const urlParams = new URLSearchParams(window.location.search);
+            sesion.usuario = urlParams.get('u') || sessionStorage.getItem('ipostel_usuario') || '';
+            sesion.rol = (urlParams.get('rol') || sessionStorage.getItem('ipostel_rol') || '').toUpperCase();
+
+            if (!sesion.usuario || sesion.rol !== 'COORD_ALIANZA') {
+                Swal.fire('Acceso Restringido', 'Debe iniciar sesión como Coordinador de Alianzas.', 'warning')
+                    .then(() => window.location.href = 'index.html');
+                return;
+            }
+
             cargarMasters();
             modalTimeline = new bootstrap.Modal(document.getElementById('modalTimeline'));
             
@@ -158,46 +172,101 @@
                 btn.disabled = true;
                 btn.innerHTML = 'Guardando...';
 
-                const datos = {
-                    accion: 'registrarHito',
-                    idMaster: document.getElementById('hitoIdMaster').value,
-                    hito: document.getElementById('selectHito').value,
-                    observaciones: document.getElementById('obsHito').value
-                };
-
                 try {
-                    const response = await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        body: new URLSearchParams(datos)
+                    const resp = await postAPI({
+                        accion: 'registrarHito',
+                        idMaster: document.getElementById('hitoIdMaster').value,
+                        hito: document.getElementById('selectHito').value,
+                        observaciones: document.getElementById('obsHito').value
                     });
-                    const data = await response.json();
 
-                    if (data.exito) {
+                    if (resp.exito) {
                         Swal.fire('¡Guardado!', 'El hito ha sido registrado.', 'success');
                         document.getElementById('formHito').reset();
-                        cargarMasters(); // Recargar tabla principal
-                        abrirTimeline(datos.idMaster); // Recargar el timeline del modal
+                        cargarMasters();
+                        abrirTimeline(document.getElementById('hitoIdMaster').value);
                     } else {
-                        Swal.fire('Error', data.mensaje, 'error');
+                        Swal.fire('Error', resp.mensaje, 'error');
                     }
                 } catch (error) {
                     Swal.fire('Error de conexión', 'No se pudo conectar.', 'error');
                 }
+                
                 btn.disabled = false;
                 btn.innerHTML = 'Guardar Hito';
             });
         });
+
+        function cerrarSesion() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // ==========================================
+        // BUSCADOR UNIVERSAL DE PAQUETES
+        // ==========================================
+        function buscarPaqueteUniversal() {
+            Swal.fire({
+                title: '🔍 Rastreador de Paquetes',
+                input: 'text',
+                inputLabel: 'Ingrese el código de seguimiento o ID Master',
+                inputPlaceholder: 'Ej: H51D8 o MST-XXXXX',
+                showCancelButton: true,
+                confirmButtonText: 'Buscar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#0d1b5e',
+                inputAttributes: { autocapitalize: 'off', autocomplete: 'off' }
+            }).then(r => {
+                if (r.isConfirmed && r.value) {
+                    Swal.fire({ title: 'Buscando en el sistema...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    
+                    postAPI({ accion: 'buscarPaquete', codigo: r.value.trim() }).then(resp => {
+                        Swal.close();
+                        if (resp.exito && resp.paquete) {
+                            const p = resp.paquete;
+                            let badgeRecepcion = 'bg-secondary';
+                            if (p.estatusRecepcion === 'Pendiente_Recepcion') badgeRecepcion = 'bg-warning text-dark';
+                            else if (p.estatusRecepcion === 'En_Custodia') badgeRecepcion = 'bg-primary';
+                            else if (p.estatusRecepcion === 'Entregado') badgeRecepcion = 'bg-success';
+                            else if (p.estatusRecepcion === 'Extraviado' || p.estatusRecepcion === 'Retrasado') badgeRecepcion = 'bg-danger';
+
+                            Swal.fire({
+                                title: '📦 Resultados: ' + p.codigo,
+                                html: `
+                                    <div class="text-start bg-light p-3 rounded">
+                                        <div class="row g-2">
+                                            <div class="col-6"><small class="text-muted">Estado General:</small><br><span class="badge bg-info text-dark">${p.estatusGeneral}</span></div>
+                                            <div class="col-6"><small class="text-muted">Estado en OPT:</small><br><span class="badge ${badgeRecepcion}">${p.estatusRecepcion}</span></div>
+                                            <div class="col-12"><small class="text-muted">OPT Destino:</small><br><b>${p.optDestino}</b></div>
+                                            <hr class="my-2">
+                                            <div class="col-6"><small class="text-muted">Origen:</small><br>${p.origen}</div>
+                                            <div class="col-6"><small class="text-muted">Destino:</small><br>${p.destino}</div>
+                                            <div class="col-4"><small class="text-muted">Piezas:</small><br><b>${p.piezas}</b></div>
+                                            <div class="col-8"><small class="text-muted">Guía MRW:</small><br>${p.guiaMrw}</div>
+                                        </div>
+                                    </div>
+                                `,
+                                icon: 'success',
+                                confirmButtonColor: '#0d1b5e',
+                                width: '600px'
+                            });
+                        } else {
+                            Swal.fire('No encontrado', resp.mensaje || 'El código no existe en el sistema.', 'warning');
+                        }
+                    }).catch(() => {
+                        Swal.close();
+                        Swal.fire('Error de conexión', 'No se pudo comunicar con el servidor.', 'error');
+                    });
+                }
+            });
+        }
 
         async function cargarMasters() {
             const tbody = document.getElementById('tablaMasters');
             tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Cargando datos...</td></tr>';
 
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: new URLSearchParams({ accion: 'obtenerMasters' })
-                });
-                const data = await response.json();
+                const data = await postAPI({ accion: 'obtenerMasters' });
 
                 if (data.exito) {
                     tbody.innerHTML = '';
@@ -205,23 +274,24 @@
 
                     if (data.masters.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No hay Masters registrados en el sistema aún.</td></tr>';
+                        return;
                     }
 
                     data.masters.forEach(m => {
-                        conteo[m.alerta]++;
+                        if (m.alerta && conteo.hasOwnProperty(m.alerta)) conteo[m.alerta]++;
                         
                         let badgeClass = m.alerta === 'OK' ? 'bg-success' : 
                                          m.alerta === 'RETRASO' ? 'bg-warning text-dark' : 
                                          m.alerta === 'CRITICO' ? 'bg-danger' : 'bg-dark';
 
-                        let fila = `
+                        tbody.innerHTML += `
                             <tr>
                                 <td class="fw-bold">${m.id}</td>
                                 <td>${m.origen} <i class="bi bi-arrow-right"></i> ${m.destino}</td>
                                 <td>${m.piezas}</td>
                                 <td>${m.guiaMrw || '<span class="text-muted small">Sin enlazar</span>'}</td>
                                 <td><span class="badge bg-secondary">${m.estatus}</span></td>
-                                <td><span class="badge ${badgeClass}">${m.alerta}</span></td>
+                                <td><span class="badge ${badgeClass}">${m.alerta || 'N/A'}</span></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" onclick="abrirTimeline('${m.id}')">
                                         <i class="bi bi-clock-history"></i> Ver / Actualizar
@@ -229,20 +299,20 @@
                                 </td>
                             </tr>
                         `;
-                        tbody.innerHTML += fila;
                     });
 
                     document.getElementById('countOK').textContent = conteo.OK;
                     document.getElementById('countRetraso').textContent = conteo.RETRASO;
                     document.getElementById('countCritico').textContent = conteo.CRITICO;
                     document.getElementById('countExtraviado').textContent = conteo.EXTRAVIADO;
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${data.mensaje}</td></tr>`;
                 }
             } catch (error) {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Error al cargar datos.</td></tr>';
             }
         }
 
-        // FUNCIÓN PARA ENLAZAR GUÍAS MRW
         function abrirEnlaceMRW() {
             Swal.fire({
                 title: 'Enlazar Guías MRW',
@@ -262,11 +332,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     Swal.fire({ title: 'Enlazando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                    fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        body: new URLSearchParams({ accion: 'enlazarGuiasMRW', texto: result.value })
-                    })
-                    .then(res => res.json())
+                    postAPI({ accion: 'enlazarGuiasMRW', texto: result.value })
                     .then(resp => {
                         if (resp.exito) {
                             Swal.fire('¡Éxito!', resp.mensaje, 'success');
@@ -280,7 +346,6 @@
             });
         }
 
-        // FUNCIÓN TIMELINE
         async function abrirTimeline(idMaster) {
             document.getElementById('modalIdMaster').textContent = idMaster;
             document.getElementById('hitoIdMaster').value = idMaster;
@@ -289,16 +354,10 @@
             lista.innerHTML = '<li class="text-muted">Cargando historial...</li>';
 
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: new URLSearchParams({ accion: 'obtenerTimeline', idMaster: idMaster })
-                });
-                const data = await response.json();
+                const data = await postAPI({ accion: 'obtenerTimeline', idMaster: idMaster });
 
                 if (data.exito) {
-                    lista.innerHTML = '';
-                    
-                    lista.innerHTML += `
+                    lista.innerHTML = `
                         <li>
                             <strong>Master Creado</strong><br>
                             <small class="text-muted">Registrado en el sistema</small>
@@ -325,6 +384,17 @@
             }
 
             modalTimeline.show();
+        }
+
+        // ==========================================
+        // UTILIDAD ESTÁNDAR DE PETICIONES
+        // ==========================================
+        function postAPI(payload) {
+            return fetch(API_URL, { 
+                method: 'POST', 
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            }).then(r => r.json());
         }
     </script>
 </body>
