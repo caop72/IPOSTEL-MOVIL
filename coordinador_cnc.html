@@ -334,10 +334,16 @@
             const reader = new FileReader();
             reader.readAsDataURL(archivo);
             reader.onload = async (e) => {
-              const base64 = e.target.result;
-              const resp = await postAPI({ accion: 'procesarCargaMasivaExcel', base64: base64 });
-              resolve(resp);
-            };
+  // Quitar el prefijo "data:...;base64," → dejar SOLO el base64 puro
+  const base64 = e.target.result.split(',')[1];
+  const resp = await postAPI({
+    accion: 'procesarCargaMasivaExcel',
+    base64: base64,
+    nombreArchivo: archivo.name,          // ← enviar el nombre
+    usuario: sesion.usuario               // ← enviar el usuario (opcional pero útil)
+  });
+  resolve(resp);
+};
           });
         }
       } catch (error) {
