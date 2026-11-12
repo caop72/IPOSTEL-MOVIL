@@ -231,12 +231,17 @@
     });
   }
 
-  function renderizarGeneral(stats) {
-    document.getElementById('totalMasters').innerText = stats.total || 0;
-    document.getElementById('totalPiezas').innerText = stats.piezas || 0;
-    document.getElementById('totalPeso').innerText = (stats.peso || 0).toFixed(1);
-    document.getElementById('totalRetrasos').innerText = (stats.retraso || 0) + (stats.critico || 0);
-
+function renderizarGeneral(stats) {
+    const fmtVE = new Intl.NumberFormat('es-VE'); // Formato venezolano (puntos miles, coma decimal)
+    
+    document.getElementById('totalMasters').innerText = fmtVE.format(stats.total || 0);
+    document.getElementById('totalPiezas').innerText = fmtVE.format(stats.piezas || 0);
+    document.getElementById('totalPeso').innerText = new Intl.NumberFormat('es-VE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(stats.peso || 0);
+    document.getElementById('totalRetrasos').innerText = fmtVE.format((stats.retraso || 0) + (stats.critico || 0));
+    
     if (chartEstatus) chartEstatus.destroy();
     chartEstatus = new Chart(document.getElementById('graficoEstatus').getContext('2d'), {
       type: 'pie', 
