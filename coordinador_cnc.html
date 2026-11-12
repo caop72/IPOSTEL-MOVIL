@@ -300,7 +300,7 @@
         <p class="small text-muted mb-2">Puedes <b>pegar el texto</b> copiado directamente de Excel o <b>subir un archivo .xlsx/.csv</b>.</p>
         <div class="mb-3">
           <label class="form-label small fw-bold">Opción 1: Pegar Texto (Código - Estatus)</label>
-          <textarea id="textoMasivo" class="form-control" rows="5" placeholder="Ejemplo:&#10;H51D8	En_Transito&#10;YV0ZS	Entregado"></textarea>
+          <textarea id="textoMasivo" class="form-control" rows="5" placeholder="Ejemplo:&#10;MST-XXXXX	En_Transito&#10;MST-YYYYY	Entregado"></textarea>
         </div>
         <div class="mb-3">
           <label class="form-label small fw-bold">Opción 2: Subir Excel</label>
@@ -325,50 +325,35 @@
 
       try {
         if (texto) {
-          // OPCIÓN 1: TEXTO
           const resp = await postAPI({ accion: 'procesarCargaMasivaTexto', texto: texto });
           return resp;
-        } else {
-            } else {
-  // OPCIÓN 2: ARCHIVO EXCEL
-  if (!archivo) {
-    return { exito: false, mensaje: 'No se seleccionó ningún archivo.' };
-  }
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(archivo);
-    reader.onload = async (e) => {
-      const base64 = e.target.result.split(',')[1];
-      const resp = await postAPI({
-        accion: 'procesarCargaMasivaExcel',
-        base64: base64,
-        nombreArchivo: archivo.name,
-        usuario: sesion.usuario
-      });
-      resolve(resp);
-    };
-    reader.onerror = () => resolve({ exito: false, mensaje: 'Error al leer el archivo con FileReader.' });
-  });
-}
-          // OPCIÓN 2: ARCHIVO EXCEL
-          return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(archivo);
-            reader.onload = async (e) => {
-  // Quitar el prefijo "data:...;base64," → dejar SOLO el base64 puro
-  const base64 = e.target.result.split(',')[1];
-  const resp = await postAPI({
-    accion: 'procesarCargaMasivaExcel',
-    base64: base64,
-    nombreArchivo: archivo.name,          // ← enviar el nombre
-    usuario: sesion.usuario               // ← enviar el usuario (opcional pero útil)
-  });
-  resolve(resp);
-};
-          });
         }
+
+        if (!archivo) {
+          return { exito: false, mensaje: 'No se seleccionó ningún archivo.' };
+        }
+
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(archivo);
+          reader.onload = async (e) => {
+            const base64Puro = e.target.result.split(',')[1];
+            try {
+              const resp = await postAPI({
+                accion: 'procesarCargaMasivaExcel',
+                base64: base64Puro,
+                nombreArchivo: archivo.name,
+                usuario: sesion.usuario
+              });
+              resolve(resp);
+            } catch (err) {
+              resolve({ exito: false, mensaje: 'Error de conexión: ' + err.message });
+            }
+          };
+          reader.onerror = () => resolve({ exito: false, mensaje: 'Error al leer el archivo.' });
+        });
       } catch (error) {
-        return { exito: false, mensaje: 'Error de conexión' };
+        return { exito: false, mensaje: 'Error de conexión: ' + error.message };
       }
     }
   }).then((result) => {
@@ -379,10 +364,7 @@
         text: result.value.mensaje,
         confirmButtonColor: '#0d1b5e'
       }).then(() => {
-        if (result.value.exito) {
-          // Recargar la tabla principal después de la carga
-          cargarMasters(); 
-        }
+        if (result.value.exito) cargarMasters();
       });
     }
   });
