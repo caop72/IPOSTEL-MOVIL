@@ -329,6 +329,27 @@
           const resp = await postAPI({ accion: 'procesarCargaMasivaTexto', texto: texto });
           return resp;
         } else {
+            } else {
+  // OPCIÓN 2: ARCHIVO EXCEL
+  if (!archivo) {
+    return { exito: false, mensaje: 'No se seleccionó ningún archivo.' };
+  }
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(archivo);
+    reader.onload = async (e) => {
+      const base64 = e.target.result.split(',')[1];
+      const resp = await postAPI({
+        accion: 'procesarCargaMasivaExcel',
+        base64: base64,
+        nombreArchivo: archivo.name,
+        usuario: sesion.usuario
+      });
+      resolve(resp);
+    };
+    reader.onerror = () => resolve({ exito: false, mensaje: 'Error al leer el archivo con FileReader.' });
+  });
+}
           // OPCIÓN 2: ARCHIVO EXCEL
           return new Promise((resolve) => {
             const reader = new FileReader();
