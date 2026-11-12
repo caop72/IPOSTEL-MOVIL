@@ -292,6 +292,74 @@
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             }).then(r => r.json());
         }
+        function abrirModalCargaMasiva() {
+  Swal.fire({
+    title: '📊 Carga Masiva de Datos',
+    html: `
+      <div class="text-start">
+        <p class="small text-muted mb-2">Puedes <b>pegar el texto</b> copiado directamente de Excel o <b>subir un archivo .xlsx/.csv</b>.</p>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Opción 1: Pegar Texto (Código - Estatus)</label>
+          <textarea id="textoMasivo" class="form-control" rows="5" placeholder="Ejemplo:&#10;H51D8	En_Transito&#10;YV0ZS	Entregado"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Opción 2: Subir Excel</label>
+          <input type="file" id="archivoExcel" class="form-control" accept=".xlsx, .xls, .csv">
+        </div>
+      </div>
+    `,
+    width: '600px',
+    showCancelButton: true,
+    confirmButtonText: 'Procesar Carga',
+    confirmButtonColor: '#198754',
+    preConfirm: async () => {
+      const texto = document.getElementById('textoMasivo').value.trim();
+      const archivo = document.getElementById('archivoExcel').files[0];
+
+      if (!texto && !archivo) {
+        Swal.showValidationMessage('Pega un texto o sube un archivo.');
+        return false;
+      }
+
+      Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      try {
+        if (texto) {
+          // OPCIÓN 1: TEXTO
+          const resp = await postAPI({ accion: 'procesarCargaMasivaTexto', texto: texto });
+          return resp;
+        } else {
+          // OPCIÓN 2: ARCHIVO EXCEL
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(archivo);
+            reader.onload = async (e) => {
+              const base64 = e.target.result;
+              const resp = await postAPI({ accion: 'procesarCargaMasivaExcel', base64: base64 });
+              resolve(resp);
+            };
+          });
+        }
+      } catch (error) {
+        return { exito: false, mensaje: 'Error de conexión' };
+      }
+    }
+  }).then((result) => {
+    if (result.isConfirmed) {
+      Swal.fire({
+        icon: result.value.exito ? 'success' : 'error',
+        title: result.value.exito ? '¡Carga Exitosa!' : 'Error',
+        text: result.value.mensaje,
+        confirmButtonColor: '#0d1b5e'
+      }).then(() => {
+        if (result.value.exito) {
+          // Recargar la tabla principal después de la carga
+          cargarMasters(); 
+        }
+      });
+    }
+  });
+}
     </script>
 </body>
 </html>
