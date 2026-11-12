@@ -91,6 +91,82 @@
         <div class="col-md-6"><div class="card"><div class="card-header py-2">🍩 Top Destinos (Piezas)</div><div class="card-body"><div class="chart-container"><canvas id="graficoDestinos"></canvas></div></div></div></div>
       </div>
     </div>
+
+<div class="tab-pane fade" id="gestion-tarifas" role="tabpanel">
+  <div class="card shadow-sm border-warning mt-3">
+    <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-cash-stack me-2"></i> Actualización de Tarifas Vigentes</span>
+      <span class="badge bg-dark">Versión Histórica Segura</span>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-info small mb-3">
+        <i class="bi bi-shield-lock-fill me-1"></i> 
+        <strong>Seguridad de Datos:</strong> Las nuevas tarifas SOLO aplican a envíos creados después de este cambio. 
+        El historial financiero permanece inmutable y auditado.
+      </div>
+      
+      <form id="formTarifas" onsubmit="actualizarTarifas(event)">
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">Servicio</label>
+            <select class="form-select form-select-sm" id="tarifaServicio" required>
+              <option value="IPOSPLUS">IPOSPLUS</option>
+              <option value="CORPORATIVO">CORPORATIVO</option>
+              <option value="SPU">SPU</option>
+              <option value="EMS">EMS</option>
+              <option value="PEQUEÑOS PAQUETES">PEQUEÑOS PAQUETES</option>
+              <option value="CERTIFICADO NACIONAL">CERTIFICADO NACIONAL</option>
+              <option value="CERTIFICADO INTERNACIONAL">CERTIFICADO INTERNACIONAL</option>
+              <option value="ORDINARIO NACIONAL">ORDINARIO NACIONAL</option>
+              <option value="ORDINARIO INTERNACIONAL">ORDINARIO INTERNACIONAL</option>
+              <option value="CORREO INTERNO">CORREO INTERNO</option>
+              <option value="CARTERIA OFICIAL">CARTERIA OFICIAL</option>
+              <option value="BULTO POSTAL">BULTO POSTAL</option>
+              <option value="TELEGRAMAS">TELEGRAMAS</option>
+              <option value="SACA M">SACA M</option>
+              <option value="GRANDES CLIENTES">GRANDES CLIENTES</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">Modalidad</label>
+            <select class="form-select form-select-sm" id="tarifaModalidad" required>
+              <option value="NACIONAL">NACIONAL</option>
+              <option value="INTERNACIONAL">INTERNACIONAL</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">Tarifa por Kg (Bs)</label>
+            <input type="number" step="0.01" class="form-control form-control-sm" id="tarifaKg" placeholder="Ej: 89000" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">Mínimo (Bs)</label>
+            <input type="number" step="0.01" class="form-control form-control-sm" id="tarifaMin" placeholder="Ej: 2200" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold small">% IVA</label>
+            <input type="number" step="0.01" class="form-control form-control-sm" id="tarifaIva" value="16" required>
+          </div>
+          <div class="col-md-4 d-flex align-items-end pb-2">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="tarifaExento">
+              <label class="form-check-label small fw-bold" for="tarifaExento">Exento de IVA</label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-bold small">Observaciones / Justificación</label>
+          <textarea class="form-control form-control-sm" id="tarifaObs" rows="2" placeholder="Ej: Ajuste tarifario noviembre 2026 - Gaceta Oficial N°..." required></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-warning fw-bold w-100 py-2">
+          <i class="bi bi-plus-circle-dotted me-2"></i> Activar Nueva Versión de Tarifa
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div class="tab-pane fade" id="gestion-tarifas" role="tabpanel">
   <div class="card shadow-sm border-warning mt-3">
     <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
@@ -685,6 +761,44 @@ function renderizarGeneral(stats) {
       document.getElementById('tarifaIva').value = 16; // Resetear default
     } else {
       Swal.fire('Error', resp.mensaje || 'No se pudo registrar la tarifa', 'error');
+    }
+  } catch (error) {
+    Swal.fire('Error de conexión', 'No se pudo comunicar con el servidor', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+    async function actualizarTarifas(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  const originalText = btn.innerHTML;
+  
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Procesando...';
+
+  const datosTarifa = [{
+    servicio: document.getElementById('tarifaServicio').value,
+    modalidad: document.getElementById('tarifaModalidad').value,
+    tarifaKg: parseFloat(document.getElementById('tarifaKg').value),
+    minimo: parseFloat(document.getElementById('tarifaMin').value),
+    iva: parseFloat(document.getElementById('tarifaIva').value),
+    exento: document.getElementById('tarifaExento').checked
+  }];
+
+  try {
+    const resp = await postAPI({
+      accion: 'crearVersionTarifas',
+      datosTarifas: datosTarifa,
+      observaciones: document.getElementById('tarifaObs').value
+    });
+
+    if (resp.exito) {
+      Swal.fire({ icon: 'success', title: '¡Tarifa Activada!', text: `Versión ${resp.versionId} registrada. Próximos envíos usarán estos valores.` });
+      e.target.reset();
+      document.getElementById('tarifaIva').value = 16;
+    } else {
+      Swal.fire('Error', resp.mensaje || 'No se pudo registrar', 'error');
     }
   } catch (error) {
     Swal.fire('Error de conexión', 'No se pudo comunicar con el servidor', 'error');
