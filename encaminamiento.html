@@ -168,18 +168,17 @@ try {
     console.error('Error calculando cobro:', err);
 }
 // === FIN: CÁLCULO AUTOMÁTICO DE COBRO ===
-                const datos = {
+                  const datos = {
                     accion: 'crearMaster',
                     origen: document.getElementById('origen').value,
                     destino: document.getElementById('destino').value,
                     piezas: document.getElementById('piezas').value,
                     peso: document.getElementById('peso').value,
-                    guiaMrw: document.getElementById('guiaMrw').value
+                    guiaMrw: document.getElementById('guiaMrw').value, // <--- COMA AGREGADA
                     montoNeto: window.cobroNeto || 0,
                     iva: window.cobroIva || 0,
                     montoTotal: window.cobroTotal || 0,
                     tarifaVersionId: window.tarifaVersionId || ''
-                    
                 };
 
                 try {
