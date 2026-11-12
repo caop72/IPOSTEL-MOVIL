@@ -648,6 +648,51 @@ function renderizarGeneral(stats) {
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     }).then(r => r.json());
   }
+    async function actualizarTarifas(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  const originalText = btn.innerHTML;
+  
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Procesando...';
+
+  const datosTarifa = [{
+    servicio: document.getElementById('tarifaServicio').value,
+    modalidad: document.getElementById('tarifaModalidad').value,
+    tarifaKg: parseFloat(document.getElementById('tarifaKg').value),
+    minimo: parseFloat(document.getElementById('tarifaMin').value),
+    iva: parseFloat(document.getElementById('tarifaIva').value),
+    exento: document.getElementById('tarifaExento').checked
+  }];
+
+  const observaciones = document.getElementById('tarifaObs').value;
+
+  try {
+    const resp = await postAPI({
+      accion: 'crearVersionTarifas',
+      datosTarifas: datosTarifa,
+      observaciones: observaciones
+    });
+
+    if (resp.exito) {
+      Swal.fire({
+        icon: 'success',
+        title: '¡Tarifa Activada!',
+        text: `Nueva versión ${resp.versionId} registrada exitosamente. Los próximos envíos usarán estos valores.`,
+        confirmButtonColor: '#0d1b5e'
+      });
+      e.target.reset();
+      document.getElementById('tarifaIva').value = 16; // Resetear default
+    } else {
+      Swal.fire('Error', resp.mensaje || 'No se pudo registrar la tarifa', 'error');
+    }
+  } catch (error) {
+    Swal.fire('Error de conexión', 'No se pudo comunicar con el servidor', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
 </script>
 </body>
 </html>
