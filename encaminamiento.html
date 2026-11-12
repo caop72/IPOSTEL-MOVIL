@@ -142,7 +142,31 @@
                 const btn = e.target.querySelector('button[type="submit"]');
                 btn.disabled = true;
                 btn.innerHTML = 'Guardando...';
+// === INICIO: CÁLCULO AUTOMÁTICO DE COBRO ===
+try {
+    const tipoServicio = document.getElementById('tipoServicio')?.value || 'ORDINARIO NACIONAL'; // Ajusta el ID si tu select tiene otro nombre
+    const pesoKg = parseFloat(document.getElementById('peso').value) || 0;
+    
+    const cobro = await postAPI({
+        accion: 'calcularCobroEnvio',
+        tipoServicio: tipoServicio,
+        pesoKg: pesoKg,
+        modalidad: 'NACIONAL' // Cambiar a INTERNACIONAL si aplica
+    });
 
+    if (!cobro.error) {
+        // Guardamos los valores financieros en variables temporales para usarlos abajo
+        window.cobroNeto = cobro.neto;
+        window.cobroIva = cobro.iva;
+        window.cobroTotal = cobro.total;
+        window.tarifaVersionId = cobro.versionId;
+    } else {
+        Swal.fire('Atención', 'No se pudo calcular el cobro: ' + cobro.error, 'warning');
+    }
+} catch (err) {
+    console.error('Error calculando cobro:', err);
+}
+// === FIN: CÁLCULO AUTOMÁTICO DE COBRO ===
                 const datos = {
                     accion: 'crearMaster',
                     origen: document.getElementById('origen').value,
