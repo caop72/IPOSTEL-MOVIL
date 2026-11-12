@@ -187,10 +187,16 @@
     // 5. Mostrar nombre en la barra superior
     document.getElementById('nombreUsuario').innerText = sesion.usuario;
 
-    // 6. Filtros por defecto (hoy)
-    const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('filtroDesde').value = hoy;
-    document.getElementById('filtroHasta').value = hoy;
+    // 6. Filtros por defecto: Desde el 1 de Enero del año actual hasta HOY
+    const hoy = new Date();
+    const anioActual = hoy.getFullYear(); // Esto dará 2026
+    
+    // Formato YYYY-MM-DD para los inputs type="date"
+    const fechaInicio = `${anioActual}-01-01`; 
+    const fechaFin = hoy.toISOString().split('T')[0];
+
+    document.getElementById('filtroDesde').value = fechaInicio;
+    document.getElementById('filtroHasta').value = fechaFin;
 
     cargarGeneral(); 
   });
